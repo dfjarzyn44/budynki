@@ -1,13 +1,197 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Moje Budynki</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Building Size Comparison</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f9;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      justify-content: center;
+    }
+    input, select {
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    .card {
+      background: white;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: #007bff;
+    }
+    .card img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 5px;
+      background-color: #eee;
+    }
+    .card h3 {
+      margin: 10px 0 5px 0;
+      font-size: 16px;
+    }
+    .card p {
+      margin: 0;
+      font-size: 13px;
+      color: #666;
+    }
+    #stage {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 20px;
+      min-height: 400px;
+      border-bottom: 4px solid #333;
+      padding-bottom: 10px;
+      background: #ffffff;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    .building-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .building-item img {
+      max-height: 350px;
+      height: auto;
+    }
+    .building-info {
+      margin-top: 8px;
+      font-size: 12px;
+      text-align: center;
+      background: #f0f0f0;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+  </style>
 </head>
 <body>
-    <h1>Witaj w mojej galerii budynków!</h1>
-    <p>To jest moja pierwsza strona.</p>
-    
-    <!-- Tutaj wyświetlimy jedno zdjęcie na próbę -->
-    <img src="wieza-eiffla-10cm.png" alt="Budynek" style="max-width: 500px;">
+
+  <h1>Building Size Comparison</h1>
+
+  <div class="controls">
+    <input type="text" id="searchInput" placeholder="Search building...">
+    <select id="categoryFilter">
+      <option value="">All Categories</option>
+    </select>
+    <select id="countryFilter">
+      <option value="">All Countries</option>
+    </select>
+  </div>
+
+  <div class="grid" id="buildingsGrid"></div>
+
+  <h2>Comparison Area</h2>
+  <div id="stage"></div>
+
+  <script>
+    let buildingsData = [];
+
+    async function loadBuildings() {
+      try {
+        const response = await fetch('budynki.json');
+        buildingsData = await response.json();
+        setupFilters();
+        renderGrid(buildingsData);
+      } catch (error) {
+        console.error('Error loading JSON:', error);
+      }
+    }
+
+    function setupFilters() {
+      const categories = [...new Set(buildingsData.map(b => b.category))];
+      const countries = [...new Set(buildingsData.map(b => b.country))];
+
+      const categorySelect = document.getElementById('categoryFilter');
+      categories.forEach(cat => {
+        categorySelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+      });
+
+      const countrySelect = document.getElementById('countryFilter');
+      countries.forEach(c => {
+        countrySelect.innerHTML += `<option value="${c}">${c}</option>`;
+      });
+    }
+
+    function renderGrid(data) {
+      const grid = document.getElementById('buildingsGrid');
+      grid.innerHTML = '';
+
+      data.forEach(b => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.onclick = () => addToStage(b);
+        card.innerHTML = `
+          <img src="${b.thumbnail}" alt="${b.name}" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+          <h3>${b.name}</h3>
+          <p>${b.city}, ${b.country}</p>
+          <p><strong>${b.height_m} m</strong></p>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function filterData() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const category = document.getElementById('categoryFilter').value;
+      const country = document.getElementById('countryFilter').value;
+
+      const filtered = buildingsData.filter(b => {
+        const matchesSearch = b.name.toLowerCase().includes(search) || b.city.toLowerCase().includes(search);
+        const matchesCategory = category === '' || b.category === category;
+        const matchesCountry = country === '' || b.country === country;
+        return matchesSearch && matchesCategory && matchesCountry;
+      });
+
+      renderGrid(filtered);
+    }
+
+    document.getElementById('searchInput').addEventListener('input', filterData);
+    document.getElementById('categoryFilter').addEventListener('change', filterData);
+    document.getElementById('countryFilter').addEventListener('change', filterData);
+
+    function addToStage(building) {
+      const stage = document.getElementById('stage');
+      const item = document.createElement('div');
+      item.className = 'building-item';
+      item.innerHTML = `
+        <img src="${building.image_2d}" alt="${building.name}">
+        <div class="building-info">
+          <strong>${building.name}</strong><br>${building.height_m} m
+        </div>
+      `;
+      stage.appendChild(item);
+    }
+
+    loadBuildings();
+  </script>
 </body>
 </html>
