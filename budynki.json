@@ -1,0 +1,46 @@
+[
+  {
+    "id": "eiffel-tower",
+    "name": "Eiffel Tower",
+    "country": "France",
+    "city": "Paris",
+    "category": "Towers & Monuments",
+    "height_m": 330,
+    "year_built": 1889,
+    "thumbnail": "eiffel-tower-mini.jpg",
+    "image_2d": "wieza-eiffla-10cm.png"
+  },
+  {
+    "id": "pkin",
+    "name": "Palace of Culture and Science",
+    "country": "Poland",
+    "city": "Warsaw",
+    "category": "Skyscrapers",
+    "height_m": 237,
+    "year_built": 1955,
+    "thumbnail": "pkin-mini.jpg",
+    "image_2d": "PKiN_10cm.png"
+  },
+  {
+    "id": "white-house",
+    "name": "The White House",
+    "country": "United States",
+    "city": "Washington, D.C.",
+    "category": "Government Buildings",
+    "height_m": 21,
+    "year_built": 1800,
+    "thumbnail": "white-house-mini.jpg",
+    "image_2d": "bialy.dom-10cm.png"
+  },
+  {
+    "id": "st-marys-basilica",
+    "name": "St. Mary's Basilica",
+    "country": "Poland",
+    "city": "Kraków",
+    "category": "Cathedrals & Churches",
+    "height_m": 82,
+    "year_built": 1397,
+    "thumbnail": "st-marys-mini.jpg",
+    "image_2d": "kosciol.mariacki-10cm.png"
+  }
+]
