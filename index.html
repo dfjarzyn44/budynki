@@ -5,81 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Building Size Comparison</title>
   <style>
-    body { 
-      font-family: Arial, sans-serif; 
-      margin: 20px; 
-      background-color: #f4f4f9; 
-      color: #333; 
-    }
+    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; color: #333; }
     h1 { text-align: center; }
+    .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; justify-content: center; }
+    input, select { padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; }
     
-    .controls { 
-      display: flex; 
-      flex-wrap: wrap; 
-      gap: 10px; 
-      margin-bottom: 20px; 
-      justify-content: center; 
-    }
-    input, select { 
-      padding: 10px; 
-      font-size: 16px; 
-      border: 1px solid #ccc; 
-      border-radius: 5px; 
-    }
-    
-    /* Zablokowana wyszukiwarka – ma stałą wysokość i własny pasek przewijania */
-    .grid { 
-      display: grid; 
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
-      gap: 15px; 
-      margin-bottom: 30px; 
-      height: 320px; 
-      overflow-y: auto; 
-      border: 1px solid #ddd; 
-      padding: 10px; 
-      background: #fff; 
-      border-radius: 8px; 
-    }
-    .card { 
-      background: white; 
-      border: 2px solid #ddd; 
-      border-radius: 8px; 
-      padding: 10px; 
-      text-align: center; 
-      cursor: pointer; 
-    }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; height: 320px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: #fff; border-radius: 8px; }
+    .card { background: white; border: 2px solid #ddd; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; }
     .card:hover { border-color: #007bff; }
-    .card img { 
-      width: 100%; 
-      height: 120px; 
-      object-fit: cover; 
-      border-radius: 5px; 
-      background-color: #eee; 
-    }
+    .card img { width: 100%; height: 120px; object-fit: cover; border-radius: 5px; background-color: #eee; }
     
-    /* Sztywny obszar porównawczy – absolutne zero skakania strony */
+    /* TO JEST KLUCZ: Stały kontener z przewijaniem */
     #stage { 
       display: flex; 
-      align-items: flex-end; 
+      align-items: flex-end; /* Trzyma budynki na dole */
       justify-content: flex-start; 
       gap: 20px; 
-      height: 650px; 
-      border-bottom: 4px solid #333; 
-      padding: 10px; 
+      height: 700px; /* Wysokość okna podglądu */
+      border-bottom: 4px solid #333; /* Linia gruntu */
+      padding: 20px; 
       background: #ffffff; 
       border-radius: 8px; 
-      overflow-x: auto; 
-      overflow-y: hidden; 
+      overflow: auto; /* Pozwala przewijać, jeśli obraz jest większy niż 700px */
+      white-space: nowrap; 
     }
     
-    .building-item { 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      flex-shrink: 0; 
-    }
+    .building-item { display: inline-flex; flex-direction: column; align-items: center; flex-shrink: 0; }
     
-    /* Zakaz jakiegokolwiek skalowania PNG – czysty Paint 1:1 */
+    /* GWARANCJA 1:1: Przeglądarka ma zakaz ruszania pikseli */
     .building-item img { 
       display: block !important; 
       height: auto !important; 
@@ -88,14 +41,7 @@
       max-width: none !important; 
     }
     
-    .building-info { 
-      margin-top: 8px; 
-      font-size: 12px; 
-      text-align: center; 
-      background: #f0f0f0; 
-      padding: 4px 8px; 
-      border-radius: 4px; 
-    }
+    .building-info { margin-top: 8px; font-size: 12px; text-align: center; background: #f0f0f0; padding: 4px 8px; border-radius: 4px; }
   </style>
 </head>
 <body>
@@ -122,9 +68,7 @@
         buildingsData = await response.json();
         setupFilters();
         renderGrid(buildingsData);
-      } catch (e) {
-        console.error("Błąd wczytywania JSON:", e);
-      }
+      } catch (e) { console.error("Error:", e); }
     }
 
     function setupFilters() {
@@ -132,8 +76,8 @@
       const countries = [...new Set(buildingsData.map(b => b.country))];
       const catSelect = document.getElementById('categoryFilter');
       categories.forEach(cat => catSelect.innerHTML += `<option value="${cat}">${cat}</option>`);
-      const countrySelect = document.getElementById('countryFilter');
-      countries.forEach(c => countrySelect.innerHTML += `<option value="${c}">${c}</option>`);
+      const countSelect = document.getElementById('countryFilter');
+      countries.forEach(c => countSelect.innerHTML += `<option value="${c}">${c}</option>`);
     }
 
     function renderGrid(data) {
