@@ -190,21 +190,21 @@
   </div>
 
   <script>
-    let buildingsData = [
-      { name: "Piramida Cheopsa", category: "Zabytki", country: "Egipt", image_2d: "Cheops-pyramid.10cm.png", thumbnail: "Cheops-pyramid.10cm.png" },
-      { name: "Chrysler Building", category: "Wieżowce", country: "USA", image_2d: "Chrysler-building-10cm.png", thumbnail: "Chrysler-building-10cm.png" },
-      { name: "Koloseum", category: "Zabytki", country: "Włochy", image_2d: "Colloseum.fixed.3arkany.10cm=px.png", thumbnail: "Colloseum.fixed.3arkany.10cm=px.png" },
-      { name: "Wieża Eiffla", category: "Wieże", country: "Francja", image_2d: "eiffel-tower.fixed.10cm.png", thumbnail: "eiffel-tower.fixed.10cm.png" },
-      { name: "Empire State Building", category: "Wieżowce", country: "USA", image_2d: "empirestate-skal10cm=px.ng2.png", thumbnail: "empirestate-skal10cm=px.ng2.png" },
-      { name: "Uniwersytet Moskiewski (MGU)", category: "Wieżowce", country: "Rosja", image_2d: "Moscow-University.png", thumbnail: "Moscow-University.png" },
-      { name: "Katedra Notre-Dame", category: "Zabytki", country: "Francja", image_2d: "notredame.10cm.png", thumbnail: "notredame.10cm.png" },
-      { name: "Pałac Kultury i Nauki", category: "Wieżowce", country: "Polska", image_2d: "PKiN.10cm=px.png", thumbnail: "PKiN.10cm=px.png" },
-      { name: "Statua Wolności", category: "Pomniki", country: "USA", image_2d: "statue-of-liberty.10cm.png", thumbnail: "statue-of-liberty.10cm.png" },
-      { name: "The Shard", category: "Wieżowce", country: "Wielka Brytania", image_2d: "the-shard.10cm.png", thumbnail: "the-shard.10cm.png" },
-      { name: "Biały Dom", category: "Budynki Rządowe", country: "USA", image_2d: "wh10cm.png", thumbnail: "wh10cm.png" }
-    ];
-
+    let buildingsData = [];
     let currentZoom = 1;
+
+    async function loadData() {
+      try {
+        const response = await fetch('budynki.json');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        buildingsData = await response.json();
+        initApp();
+      } catch (error) {
+        console.error("Błąd podczas ładowania pliku JSON:", error);
+      }
+    }
 
     function initApp() {
       setupFilters();
@@ -214,9 +214,13 @@
     function setupFilters() {
       const categories = [...new Set(buildingsData.map(b => b.category))];
       const countries = [...new Set(buildingsData.map(b => b.country))];
+      
       const catSelect = document.getElementById('categoryFilter');
+      catSelect.innerHTML = '<option value="">All Categories</option>';
       categories.forEach(cat => catSelect.innerHTML += `<option value="${cat}">${cat}</option>`);
+      
       const countSelect = document.getElementById('countryFilter');
+      countSelect.innerHTML = '<option value="">All Countries</option>';
       countries.forEach(c => countSelect.innerHTML += `<option value="${c}">${c}</option>`);
     }
 
@@ -253,10 +257,20 @@
       item.innerHTML = `
         <button class="remove-btn" onclick="removeItem(this)" title="Remove building">✕</button>
         <div class="building-info"><strong>${building.name}</strong></div>
-        <img src="${building.image_2d}" alt="${building.name}" onload="updateStageHeight()">
+        <img src="${building.image_2d}" alt="${building.name}">
       `;
+      
       stage.appendChild(item);
-      updateStageHeight();
+
+      const img = item.querySelector('img');
+      if (img.complete) {
+        updateStageHeight();
+      } else {
+        img.addEventListener('load', updateStageHeight);
+        img.addEventListener('error', () => {
+          console.error('Błąd ładowania obrazka:', building.image_2d);
+        });
+      }
     }
 
     function removeItem(btn) {
@@ -298,7 +312,7 @@
       setZoom(currentZoom + delta);
     }
 
-    initApp();
+    loadData();
   </script>
 </body>
 </html>
