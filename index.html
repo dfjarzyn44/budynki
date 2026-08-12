@@ -86,10 +86,9 @@
     }
     .zoom-controls button:hover { background: #e0e0e0; }
 
-    /* Dynamicznie dopasowujące się okno podglądu */
     .stage-wrapper {
       width: 100%;
-      height: 300px; /* Domyślna wysokość startowa */
+      height: 300px;
       border: 2px solid #bbb;
       border-radius: 8px;
       background: #ffffff;
@@ -191,18 +190,25 @@
   </div>
 
   <script>
-    let buildingsData = [];
+    let buildingsData = [
+      { name: "Piramida Cheopsa", category: "Zabytki", country: "Egipt", image_2d: "Cheops-pyramid.10cm.png", thumbnail: "Cheops-pyramid.10cm.png" },
+      { name: "Chrysler Building", category: "Wieżowce", country: "USA", image_2d: "Chrysler-building-10cm.png", thumbnail: "Chrysler-building-10cm.png" },
+      { name: "Koloseum", category: "Zabytki", country: "Włochy", image_2d: "Colloseum.fixed.3arkany.10cm=px.png", thumbnail: "Colloseum.fixed.3arkany.10cm=px.png" },
+      { name: "Wieża Eiffla", category: "Wieże", country: "Francja", image_2d: "eiffel-tower.fixed.10cm.png", thumbnail: "eiffel-tower.fixed.10cm.png" },
+      { name: "Empire State Building", category: "Wieżowce", country: "USA", image_2d: "empirestate-skal10cm=px.ng2.png", thumbnail: "empirestate-skal10cm=px.ng2.png" },
+      { name: "Uniwersytet Moskiewski (MGU)", category: "Wieżowce", country: "Rosja", image_2d: "Moscow-University.png", thumbnail: "Moscow-University.png" },
+      { name: "Katedra Notre-Dame", category: "Zabytki", country: "Francja", image_2d: "notredame.10cm.png", thumbnail: "notredame.10cm.png" },
+      { name: "Pałac Kultury i Nauki", category: "Wieżowce", country: "Polska", image_2d: "PKiN.10cm=px.png", thumbnail: "PKiN.10cm=px.png" },
+      { name: "Statua Wolności", category: "Pomniki", country: "USA", image_2d: "statue-of-liberty.10cm.png", thumbnail: "statue-of-liberty.10cm.png" },
+      { name: "The Shard", category: "Wieżowce", country: "Wielka Brytania", image_2d: "the-shard.10cm.png", thumbnail: "the-shard.10cm.png" },
+      { name: "Biały Dom", category: "Budynki Rządowe", country: "USA", image_2d: "wh10cm.png", thumbnail: "wh10cm.png" }
+    ];
+
     let currentZoom = 1;
 
-    async function loadBuildings() {
-      try {
-        const response = await fetch('budynki.json');
-        buildingsData = await response.json();
-        setupFilters();
-        renderGrid(buildingsData);
-      } catch (e) {
-        console.error("Error loading JSON:", e);
-      }
+    function initApp() {
+      setupFilters();
+      renderGrid(buildingsData);
     }
 
     function setupFilters() {
@@ -273,7 +279,6 @@
         }
       });
 
-      // Wylicz wysokość z uwzględnieniem zooma i zapasu na nazwę oraz nagłówek
       const calculatedHeight = (maxHeight + 80) * currentZoom + 40;
       document.querySelector('.stage-wrapper').style.height = Math.max(300, calculatedHeight) + 'px';
     }
@@ -293,7 +298,7 @@
       setZoom(currentZoom + delta);
     }
 
-    loadBuildings();
+    initApp();
   </script>
 </body>
 </html>
