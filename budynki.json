@@ -1,14 +1,80 @@
 [
   {
+    "id": "cheops-pyramid",
+    "name": "Great Pyramid of Giza",
+    "country": "Egypt",
+    "city": "Giza",
+    "category": "Ancient Monuments",
+    "height_m": 138,
+    "year_built": -2560,
+    "thumbnail": "Cheops-pyramid.10cm.png",
+    "image_2d": "Cheops-pyramid.10cm.png"
+  },
+  {
+    "id": "chrysler-building",
+    "name": "Chrysler Building",
+    "country": "United States",
+    "city": "New York City",
+    "category": "Skyscrapers",
+    "height_m": 319,
+    "year_built": 1930,
+    "thumbnail": "Chrysler-building-10cm.png",
+    "image_2d": "Chrysler-building-10cm.png"
+  },
+  {
+    "id": "colosseum",
+    "name": "Colosseum",
+    "country": "Italy",
+    "city": "Rome",
+    "category": "Ancient Monuments",
+    "height_m": 48,
+    "year_built": 80,
+    "thumbnail": "Colloseum.fixed.3arkany.10cm=px.png",
+    "image_2d": "Colloseum.fixed.3arkany.10cm=px.png"
+  },
+  {
     "id": "eiffel-tower",
     "name": "Eiffel Tower",
     "country": "France",
     "city": "Paris",
     "category": "Towers & Monuments",
-    "height_m": 330,
+    "height_m": 300,
     "year_built": 1889,
-    "thumbnail": "eiffel-tower-mini.jpg",
-    "image_2d": "wieza-eiffla-10cm.png"
+    "thumbnail": "eiffel-tower.fixed.10cm.png",
+    "image_2d": "eiffel-tower.fixed.10cm.png"
+  },
+  {
+    "id": "empire-state-building",
+    "name": "Empire State Building",
+    "country": "United States",
+    "city": "New York City",
+    "category": "Skyscrapers",
+    "height_m": 443,
+    "year_built": 1931,
+    "thumbnail": "empirestate-skal10cm=px.ng2.png",
+    "image_2d": "empirestate-skal10cm=px.ng2.png"
+  },
+  {
+    "id": "moscow-state-university",
+    "name": "Main Building of Moscow State University",
+    "country": "Russia",
+    "city": "Moscow",
+    "category": "Skyscrapers",
+    "height_m": 240,
+    "year_built": 1953,
+    "thumbnail": "Moscow-University.png",
+    "image_2d": "Moscow-University.png"
+  },
+  {
+    "id": "notre-dame",
+    "name": "Notre-Dame Cathedral",
+    "country": "France",
+    "city": "Paris",
+    "category": "Cathedrals & Churches",
+    "height_m": 69,
+    "year_built": 1345,
+    "thumbnail": "notredame.10cm.png",
+    "image_2d": "notredame.10cm.png"
   },
   {
     "id": "pkin",
@@ -18,8 +84,30 @@
     "category": "Skyscrapers",
     "height_m": 237,
     "year_built": 1955,
-    "thumbnail": "pkin-mini.jpg",
-    "image_2d": "PKiN_10cm.png"
+    "thumbnail": "PKiN.10cm=px.png",
+    "image_2d": "PKiN.10cm=px.png"
+  },
+  {
+    "id": "statue-of-liberty",
+    "name": "Statue of Liberty",
+    "country": "United States",
+    "city": "New York City",
+    "category": "Towers & Monuments",
+    "height_m": 93,
+    "year_built": 1886,
+    "thumbnail": "statue-of-liberty.10cm.png",
+    "image_2d": "statue-of-liberty.10cm.png"
+  },
+  {
+    "id": "the-shard",
+    "name": "The Shard",
+    "country": "United Kingdom",
+    "city": "London",
+    "category": "Skyscrapers",
+    "height_m": 310,
+    "year_built": 2012,
+    "thumbnail": "the-shard.10cm.png",
+    "image_2d": "the-shard.10cm.png"
   },
   {
     "id": "white-house",
@@ -29,18 +117,7 @@
     "category": "Government Buildings",
     "height_m": 21,
     "year_built": 1800,
-    "thumbnail": "white-house-mini.jpg",
-    "image_2d": "bialy.dom-10cm.png"
-  },
-  {
-    "id": "st-marys-basilica",
-    "name": "St. Mary's Basilica",
-    "country": "Poland",
-    "city": "Kraków",
-    "category": "Cathedrals & Churches",
-    "height_m": 82,
-    "year_built": 1397,
-    "thumbnail": "st-marys-mini.jpg",
-    "image_2d": "kosciol.mariacki-10cm.png"
+    "thumbnail": "wh10cm.png",
+    "image_2d": "wh10cm.png"
   }
 ]
