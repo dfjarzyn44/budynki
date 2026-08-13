@@ -40,16 +40,15 @@
       position: relative;
       user-select: none;
       touch-action: pan-y;
-      /* Ochrona przed miganiem przy skrolowaniu strony */
-      -webkit-transform: translateZ(0);
-      transform: translateZ(0);
     }
 
-    /* TRYB PEŁNOEKRANOWY */
+    /* TRYB PEŁNOEKRANOWY (Z OBSŁUGĄ MOBILNEGO VIEWPORTU 100dvh) */
     .stage-wrapper.fullscreen {
       position: fixed;
       top: 0; left: 0;
-      width: 100vw; height: 100vh;
+      width: 100vw; 
+      height: 100vh;
+      height: 100dvh;
       z-index: 9999;
       border: none;
       border-radius: 0;
@@ -76,18 +75,14 @@
       align-items: flex-end; 
       justify-content: flex-start; 
       gap: 30px; 
-      padding: 20px 30px;
+      padding: 20px 30px 40px 30px; /* Dodatkowa przestrzeń na trawę */
       box-sizing: border-box;
       min-width: 100%;
       width: max-content;
-      background: linear-gradient(to bottom, transparent calc(100% - 20px), #4CAF50 calc(100% - 20px), #2e7d32 100%);
+      background: linear-gradient(to bottom, transparent calc(100% - 35px), #4CAF50 calc(100% - 35px), #2e7d32 100%);
       transform-origin: 0 0;
       position: absolute; 
       top: 0; left: 0;
-      /* Naprawa GPU renderowania - zapobiega znikaniu elementów */
-      will-change: transform;
-      -webkit-backface-visibility: hidden;
-      backface-visibility: hidden;
     }
     
     .building-item { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; position: relative; }
@@ -95,11 +90,7 @@
       display: block; 
       height: auto; 
       width: auto; 
-      pointer-events: none; 
-      /* Zapobiega mruganiu samych grafik */
-      -webkit-backface-visibility: hidden;
-      backface-visibility: hidden;
-      transform: translateZ(0);
+      pointer-events: none;
     }
     
     .remove-btn {
@@ -196,7 +187,7 @@
       });
 
       const wrapperH = wrapper.clientHeight;
-      const neededH = maxBHeight > 0 ? (maxBHeight + 500) : wrapperH;
+      const neededH = maxBHeight > 0 ? (maxBHeight + 300) : wrapperH;
       stage.style.height = neededH + 'px';
     }
 
@@ -205,18 +196,18 @@
       const scaledH = stageH * currentZoom;
       const scaledW = stageW * currentZoom;
 
-      // BLOKADA PIONOWA
-      if (scaledH <= wrapperH) {
-        panY = wrapperH - scaledH;
-      } else {
-        const minPanY = wrapperH - scaledH;
-        panY = Math.min(0, Math.max(minPanY, panY));
-      }
+      // ELASTYCZNA BLOKADA PIONOWA (Umożliwia swobodne przewijanie na telefonie)
+      const minPanY = Math.min(0, wrapperH - scaledH);
+      const maxPanY = Math.max(0, wrapperH - scaledH);
+      panY = Math.min(maxPanY, Math.max(minPanY, panY));
 
-      // BLOKADA POZIOMA (Pozwala na płynne przybliżanie do kursora bez zrywania do lewego rogu)
+      // BLOKADA POZIOMA
       if (scaledW > wrapperW) {
         const minPanX = wrapperW - scaledW;
         panX = Math.min(0, Math.max(minPanX, panX));
+      } else {
+        const maxPanX = Math.max(0, wrapperW - scaledW);
+        panX = Math.min(maxPanX, Math.max(0, panX));
       }
     }
 
