@@ -24,35 +24,34 @@
     .stage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     .zoom-controls { background: #fff; padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; }
 
-    /* WIDOK PŁÓTNA - "Okno" przez które patrzymy */
+    /* WIDOK PŁÓTNA - Okno podglądu */
     .stage-wrapper {
       width: 100%;
-      height: 70vh; /* Duży obszar roboczy */
+      height: 70vh;
       border: 2px solid #bbb;
       border-radius: 8px;
       background: #ffffff;
-      overflow: hidden; /* Ukrywamy suwaki, bo używamy pan/zoom */
+      overflow: hidden;
       position: relative;
       cursor: grab;
       user-select: none;
     }
     .stage-wrapper:active { cursor: grabbing; }
 
-    /* SAMO PŁÓTNO - Kontener na budynki z Flexboxem */
+    /* SAMO PŁÓTNO */
     #stage { 
       display: flex; 
-      align-items: flex-end; /* Budynki zawsze na dole */
+      align-items: flex-end; 
       justify-content: flex-start; 
       gap: 30px; 
       padding: 20px 30px;
       box-sizing: border-box;
-      min-height: 100%; /* Rozciąga się na wysokość okna */
+      min-height: 100%; 
       min-width: 100%;
       width: max-content;
-      /* Trawa na dole */
       background: linear-gradient(to bottom, transparent calc(100% - 20px), #4CAF50 calc(100% - 20px), #2e7d32 100%);
       transform-origin: 0 0;
-      position: absolute; /* Umożliwia transformy */
+      position: absolute; 
       top: 0;
       left: 0;
       will-change: transform;
@@ -84,7 +83,7 @@
   <div class="stage-header">
     <h2>Comparison Area</h2>
     <div class="zoom-controls">
-      Scale: <span id="zoomVal">100%</span> <button onclick="resetZoom()">Reset</button>
+      Scale: <span id="zoomVal">100%</span> <button onclick="fitToStage()">Fit / Reset</button>
     </div>
   </div>
 
@@ -107,7 +106,6 @@
       }
     }
 
-    // Blokada granicy: trawa nie może odlecieć od dołu okna
     function clampPan() {
       const wrapper = document.getElementById('stageWrapper');
       const stage = document.getElementById('stage');
@@ -117,7 +115,7 @@
       const stageW = Math.max(stage.offsetWidth, wrapperW);
       const stageH = Math.max(stage.offsetHeight, wrapperH);
 
-      // Blokada w pionie - linia trawy przytwierdzona do dołu
+      // Blokada w pionie - trawa zawsze przy dołu
       const minPanY = wrapperH - (stageH * currentZoom);
       const maxPanY = 0;
       panY = Math.min(maxPanY, Math.max(minPanY, panY));
@@ -135,12 +133,12 @@
     function initInteractions() {
       const wrapper = document.getElementById('stageWrapper');
 
-      // ZOOM NA KURSOR
+      // ZOOM NA KURSOR (minimalny zoom: 0.05)
       wrapper.addEventListener('wheel', (e) => {
         e.preventDefault();
         const zoomStep = 0.1;
         const factor = e.deltaY < 0 ? (1 + zoomStep) : (1 / (1 + zoomStep));
-        const newZoom = Math.min(Math.max(currentZoom * factor, 1), 5); // Minimum 100%
+        const newZoom = Math.min(Math.max(currentZoom * factor, 0.05), 5);
         
         const rect = wrapper.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
@@ -175,11 +173,32 @@
       document.getElementById('stage').style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
     }
 
-    function resetZoom() { 
-      currentZoom = 1; 
-      panX = 0; 
-      panY = 0; 
-      applyTransform(); 
+    // Automatycznie dopasowuje widok do wysokości najwyższego budynku
+    function fitToStage() {
+      const wrapper = document.getElementById('stageWrapper');
+      const stage = document.getElementById('stage');
+
+      if (stage.children.length === 0) {
+        currentZoom = 1;
+        panX = 0;
+        panY = 0;
+        applyTransform();
+        return;
+      }
+
+      // Wyliczanie najwłaściwszej skali tak, aby najwyższy budynek zmieścił się w oknie
+      const wrapperH = wrapper.clientHeight;
+      const stageH = stage.offsetHeight;
+
+      if (stageH > wrapperH) {
+        currentZoom = (wrapperH - 40) / stageH; // Margines bezpieczeństwa
+      } else {
+        currentZoom = 1;
+      }
+
+      panX = 0;
+      panY = wrapperH - (stageH * currentZoom);
+      applyTransform();
     }
 
     function addToStage(building) {
@@ -187,12 +206,17 @@
       const item = document.createElement('div');
       item.className = 'building-item';
       item.innerHTML = `
-        <button class="remove-btn" onclick="this.parentElement.remove(); applyTransform();">✕</button>
+        <button class="remove-btn" onclick="this.parentElement.remove(); fitToStage();">✕</button>
         <div class="building-info"><strong>${building.name}</strong></div>
         <img src="${building.image_2d}" alt="${building.name}">
       `;
+      
+      // Poczekaj na załadowanie grafiki, aby prawidłowo obliczyć wysokość
+      const img = item.querySelector('img');
+      img.onload = () => fitToStage();
+      
       stage.appendChild(item);
-      applyTransform();
+      fitToStage();
     }
 
     function renderGrid(data) {
