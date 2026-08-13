@@ -24,7 +24,7 @@
     .stage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     .zoom-controls { background: #fff; padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; }
 
-    /* WIDOK PŁÓTNA - Okno podglądu */
+    /* OKNO PODGLĄDU */
     .stage-wrapper {
       width: 100%;
       height: 70vh;
@@ -38,7 +38,7 @@
     }
     .stage-wrapper:active { cursor: grabbing; }
 
-    /* SAMO PŁÓTNO */
+    /* PŁÓTNO */
     #stage { 
       display: flex; 
       align-items: flex-end; 
@@ -46,7 +46,6 @@
       gap: 30px; 
       padding: 20px 30px;
       box-sizing: border-box;
-      min-height: 100%; 
       min-width: 100%;
       width: max-content;
       background: linear-gradient(to bottom, transparent calc(100% - 20px), #4CAF50 calc(100% - 20px), #2e7d32 100%);
@@ -106,6 +105,23 @@
       }
     }
 
+    function updateStageHeight() {
+      const wrapper = document.getElementById('stageWrapper');
+      const stage = document.getElementById('stage');
+      const buildingItems = stage.querySelectorAll('.building-item');
+
+      let maxBHeight = 0;
+      buildingItems.forEach(item => {
+        if (item.offsetHeight > maxBHeight) {
+          maxBHeight = item.offsetHeight;
+        }
+      });
+
+      const wrapperH = wrapper.clientHeight;
+      const neededH = maxBHeight > 0 ? (maxBHeight + 500) : wrapperH;
+      stage.style.height = neededH + 'px';
+    }
+
     function clampPan() {
       const wrapper = document.getElementById('stageWrapper');
       const stage = document.getElementById('stage');
@@ -113,19 +129,29 @@
       const wrapperW = wrapper.clientWidth;
       const wrapperH = wrapper.clientHeight;
       const stageW = Math.max(stage.offsetWidth, wrapperW);
-      const stageH = Math.max(stage.offsetHeight, wrapperH);
+      const stageH = stage.offsetHeight;
 
-      // Blokada w pionie - trawa zawsze przy dołu
-      const minPanY = wrapperH - (stageH * currentZoom);
-      const maxPanY = 0;
-      panY = Math.min(maxPanY, Math.max(minPanY, panY));
+      const scaledH = stageH * currentZoom;
+      const scaledW = stageW * currentZoom;
 
-      // Blokada w poziomie
-      const minPanX = wrapperW - (stageW * currentZoom);
-      const maxPanX = 0;
-      if (stageW * currentZoom <= wrapperW) {
+      // BLOKADA PIONOWA (Y)
+      if (scaledH <= wrapperH) {
+        // Trawa przyklejona dokładnie do dołu okna
+        panY = wrapperH - scaledH;
+      } else {
+        // minPanY: trawa na dole okna (brak wolnej przestrzeni pod trawą)
+        const minPanY = wrapperH - scaledH;
+        // maxPanY: szczyt nieba na samej górze okna
+        const maxPanY = 0;
+        panY = Math.min(maxPanY, Math.max(minPanY, panY));
+      }
+
+      // BLOKADA POZIOMA (X)
+      if (scaledW <= wrapperW) {
         panX = 0;
       } else {
+        const minPanX = wrapperW - scaledW;
+        const maxPanX = 0;
         panX = Math.min(maxPanX, Math.max(minPanX, panX));
       }
     }
@@ -133,7 +159,7 @@
     function initInteractions() {
       const wrapper = document.getElementById('stageWrapper');
 
-      // ZOOM NA KURSOR (minimalny zoom: 0.05)
+      // ZOOM NA KURSOR
       wrapper.addEventListener('wheel', (e) => {
         e.preventDefault();
         const zoomStep = 0.1;
@@ -150,7 +176,7 @@
         applyTransform();
       }, { passive: false });
 
-      // PANNING
+      // PANNING (PRZESUWANIE)
       let isDown = false, startX, startY;
       wrapper.addEventListener('mousedown', (e) => {
         if (e.target.closest('.remove-btn')) return;
@@ -173,12 +199,13 @@
       document.getElementById('stage').style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
     }
 
-    // Automatycznie dopasowuje widok do wysokości najwyższego budynku
     function fitToStage() {
+      updateStageHeight();
       const wrapper = document.getElementById('stageWrapper');
       const stage = document.getElementById('stage');
 
-      if (stage.children.length === 0) {
+      const buildingItems = stage.querySelectorAll('.building-item');
+      if (buildingItems.length === 0) {
         currentZoom = 1;
         panX = 0;
         panY = 0;
@@ -186,12 +213,11 @@
         return;
       }
 
-      // Wyliczanie najwłaściwszej skali tak, aby najwyższy budynek zmieścił się w oknie
       const wrapperH = wrapper.clientHeight;
       const stageH = stage.offsetHeight;
 
       if (stageH > wrapperH) {
-        currentZoom = (wrapperH - 40) / stageH; // Margines bezpieczeństwa
+        currentZoom = wrapperH / stageH;
       } else {
         currentZoom = 1;
       }
@@ -211,7 +237,6 @@
         <img src="${building.image_2d}" alt="${building.name}">
       `;
       
-      // Poczekaj na załadowanie grafiki, aby prawidłowo obliczyć wysokość
       const img = item.querySelector('img');
       img.onload = () => fitToStage();
       
