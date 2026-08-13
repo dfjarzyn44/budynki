@@ -86,20 +86,29 @@
     }
     .zoom-controls button:hover { background: #e0e0e0; }
 
-    /* USZTYWNIENIE PŁÓTNA - stała wysokość i chwytanie myszką */
+    /* DUŻE PŁÓTNO BEZ SUWAKÓW */
     .stage-wrapper {
       width: 100%;
-      height: 550px; /* Sztywna wysokość ramki, nic nie skacze */
+      height: 850px; /* Powiększone płótno w pionie */
+      min-height: 75vh;
       border: 2px solid #bbb;
       border-radius: 8px;
       background: #ffffff;
       overflow: auto;
       position: relative;
-      cursor: grab; /* Kursor rączki do przesuwania */
-      user-select: none; /* Zapobiega przypadkowemu zaznaczaniu tekstu przy przeciąganiu */
+      cursor: grab;
+      user-select: none;
+
+      /* Ukrycie suwaków w przeglądarkach */
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE / Edge */
     }
+    .stage-wrapper::-webkit-scrollbar {
+      display: none; /* Chrome / Safari / Opera */
+    }
+    
     .stage-wrapper:active {
-      cursor: grabbing; /* Kursor zamkniętej dłoni przy trzymaniu kliknięcia */
+      cursor: grabbing;
     }
 
     #stage { 
@@ -131,7 +140,7 @@
       max-height: none !important; 
       width: auto !important; 
       max-width: none !important; 
-      pointer-events: none; /* Zapobiega przeciąganiu samego obrazka */
+      pointer-events: none;
     }
     
     .remove-btn {
@@ -212,7 +221,7 @@
       setupFilters();
       renderGrid(buildingsData);
       setupScrollZoom();
-      setupPan(); // Obsługa chwytania i przesuwania płótna
+      setupPan();
     }
 
     function setupFilters() {
@@ -271,7 +280,6 @@
       btn.parentElement.remove();
     }
 
-    // Zoom kółkiem / gładzikiem
     function setupScrollZoom() {
       const wrapper = document.getElementById('stageWrapper');
       
@@ -286,14 +294,12 @@
       }, { passive: false });
     }
 
-    // Obsługa przesuwania lewym przyciskiem myszy
     function setupPan() {
       const wrapper = document.getElementById('stageWrapper');
       let isDown = false;
       let startX, startY, scrollLeft, scrollTop;
 
       wrapper.addEventListener('mousedown', (e) => {
-        // Ignoruj kliknięcie, jeśli trafiono w przycisk usuwania X
         if (e.target.closest('.remove-btn')) return;
 
         isDown = true;
@@ -311,8 +317,8 @@
         e.preventDefault();
         const x = e.pageX - wrapper.offsetLeft;
         const y = e.pageY - wrapper.offsetTop;
-        const walkX = (x - startX) * 1.5; // Prędkość przesuwania poziom
-        const walkY = (y - startY) * 1.5; // Prędkość przesuwania pion
+        const walkX = (x - startX) * 1.5;
+        const walkY = (y - startY) * 1.5;
         wrapper.scrollLeft = scrollLeft - walkX;
         wrapper.scrollTop = scrollTop - walkY;
       });
