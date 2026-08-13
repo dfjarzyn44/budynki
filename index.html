@@ -6,7 +6,7 @@
   <title>Building Size Comparison</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; color: #333; }
-    body.no-scroll { overflow: hidden; } /* Blokada przewijania tła w trybie pełnym */
+    body.no-scroll { overflow: hidden; }
 
     h1 { text-align: center; }
     
@@ -29,7 +29,7 @@
     .btn-action { background: #007bff; color: white; border: none; padding: 8px 14px; border-radius: 5px; font-weight: bold; cursor: pointer; }
     .btn-action:hover { background: #0056b3; }
 
-    /* OKNO PODGLĄDU - STATYCZNE NA STRONIE */
+    /* OKNO PODGLĄDU */
     .stage-wrapper {
       width: 100%;
       height: 450px;
@@ -39,7 +39,7 @@
       overflow: hidden;
       position: relative;
       user-select: none;
-      touch-action: pan-y; /* Pozwala na normalne przewijanie strony dotykiem */
+      touch-action: pan-y;
     }
 
     /* TRYB PEŁNOEKRANOWY (DYNAMICZNY) */
@@ -50,7 +50,7 @@
       z-index: 9999;
       border: none;
       border-radius: 0;
-      touch-action: none; /* Przejmuje 100% gestów dotykowych */
+      touch-action: none;
       cursor: grab;
     }
     .stage-wrapper.fullscreen:active { cursor: grabbing; }
@@ -81,7 +81,6 @@
       transform-origin: 0 0;
       position: absolute; 
       top: 0; left: 0;
-      will-change: transform;
     }
     
     .building-item { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; position: relative; }
@@ -124,6 +123,10 @@
   <script>
     let buildingsData = [], currentZoom = 1, panX = 0, panY = 0;
     let isFullscreen = false;
+    
+    // CACHE WYMIARÓW DLA PŁYNNOŚCI
+    let stageDim = { wrapperW: 0, wrapperH: 0, stageW: 0, stageH: 0 };
+    let ticking = false;
 
     async function loadData() {
       try {
@@ -135,6 +138,15 @@
       } catch (e) {
         console.error("Błąd ładowania JSON:", e);
       }
+    }
+
+    function updateDimensionsCache() {
+      const wrapper = document.getElementById('stageWrapper');
+      const stage = document.getElementById('stage');
+      stageDim.wrapperW = wrapper.clientWidth;
+      stageDim.wrapperH = wrapper.clientHeight;
+      stageDim.stageW = stage.scrollWidth;
+      stageDim.stageH = stage.offsetHeight;
     }
 
     function toggleFullscreen() {
@@ -169,44 +181,50 @@
       });
 
       const wrapperH = wrapper.clientHeight;
-      // Najwyższy budynek + 500px marginesu nieba
       const neededH = maxBHeight > 0 ? (maxBHeight + 500) : wrapperH;
       stage.style.height = neededH + 'px';
     }
 
     function clampPan() {
-      const wrapper = document.getElementById('stageWrapper');
-      const stage = document.getElementById('stage');
-
-      const wrapperW = wrapper.clientWidth;
-      const wrapperH = wrapper.clientHeight;
-      const stageW = Math.max(stage.offsetWidth, wrapperW);
-      const stageH = stage.offsetHeight;
-
+      const { wrapperW, wrapperH, stageW, stageH } = stageDim;
       const scaledH = stageH * currentZoom;
       const scaledW = stageW * currentZoom;
 
-      // BLOKADA PIONOWA (Trawa zablokowana na samym dole)
+      // BLOKADA PIONOWA
       if (scaledH <= wrapperH) {
         panY = wrapperH - scaledH;
       } else {
         const minPanY = wrapperH - scaledH;
-        const maxPanY = 0;
-        panY = Math.min(maxPanY, Math.max(minPanY, panY));
+        panY = Math.min(0, Math.max(minPanY, panY));
       }
 
       // BLOKADA POZIOMA
-      const minPanX = Math.min(0, wrapperW - scaledW);
-      const maxPanX = Math.max(0, wrapperW - scaledW);
-      panX = Math.min(maxPanX, Math.max(minPanX, panX));
+      if (scaledW <= wrapperW) {
+        panX = 0;
+      } else {
+        const minPanX = wrapperW - scaledW;
+        panX = Math.min(0, Math.max(minPanX, panX));
+      }
+    }
+
+    function applyTransform() {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          clampPan();
+          document.getElementById('zoomVal').innerText = Math.round(currentZoom * 100) + '%';
+          document.getElementById('stage').style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${currentZoom})`;
+          ticking = false;
+        });
+        ticking = true;
+      }
     }
 
     function initInteractions() {
       const wrapper = document.getElementById('stageWrapper');
 
-      // ZOOM (Obsługa kółka myszy)
+      // ZOOM (Myszka)
       wrapper.addEventListener('wheel', (e) => {
-        if (!isFullscreen) return; // Zoom działa tylko w trybie interaktywnym
+        if (!isFullscreen) return;
         e.preventDefault();
         
         const zoomStep = 0.1;
@@ -239,12 +257,16 @@
         applyTransform();
       });
 
-      // OBSŁUGA DOTYKU DLA SMARTFONÓW (Przesuwanie + Szczypanie/Pinch-to-zoom)
+      // OBSŁUGA DOTYKU
       let touchStartDist = 0;
       let initialZoom = 1;
+      let touchStartMidX = 0, touchStartMidY = 0;
+      let initialPanX = 0, initialPanY = 0;
 
       wrapper.addEventListener('touchstart', (e) => {
         if (!isFullscreen) return;
+        const rect = wrapper.getBoundingClientRect();
+        
         if (e.touches.length === 1) {
           isDown = true;
           startX = e.touches[0].clientX - panX;
@@ -256,41 +278,50 @@
             e.touches[0].clientY - e.touches[1].clientY
           );
           initialZoom = currentZoom;
+          touchStartMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+          touchStartMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+          initialPanX = panX;
+          initialPanY = panY;
         }
       }, { passive: true });
 
       wrapper.addEventListener('touchmove', (e) => {
         if (!isFullscreen) return;
+        const rect = wrapper.getBoundingClientRect();
+
         if (e.touches.length === 1 && isDown) {
           panX = e.touches[0].clientX - startX;
           panY = e.touches[0].clientY - startY;
           applyTransform();
         } else if (e.touches.length === 2 && touchStartDist > 0) {
-          const dist = Math.hypot(
+          const currentDist = Math.hypot(
             e.touches[0].clientX - e.touches[1].clientX,
             e.touches[0].clientY - e.touches[1].clientY
           );
-          const factor = dist / touchStartDist;
-          currentZoom = Math.min(Math.max(initialZoom * factor, 0.05), 5);
+          const factor = currentDist / touchStartDist;
+          const newZoom = Math.min(Math.max(initialZoom * factor, 0.05), 5);
+
+          const currentMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+          const currentMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+
+          panX = currentMidX - (touchStartMidX - initialPanX) * (newZoom / initialZoom);
+          panY = currentMidY - (touchStartMidY - initialPanY) * (newZoom / initialZoom);
+          currentZoom = newZoom;
           applyTransform();
         }
       }, { passive: true });
 
       wrapper.addEventListener('touchend', () => { isDown = false; touchStartDist = 0; });
-    }
-
-    function applyTransform() {
-      clampPan();
-      document.getElementById('zoomVal').innerText = Math.round(currentZoom * 100) + '%';
-      document.getElementById('stage').style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
+      window.addEventListener('resize', () => fitToStage());
     }
 
     function fitToStage() {
       updateStageHeight();
-      const wrapper = document.getElementById('stageWrapper');
-      const stage = document.getElementById('stage');
+      updateDimensionsCache();
 
+      const stage = document.getElementById('stage');
       const buildingItems = stage.querySelectorAll('.building-item');
+      
       if (buildingItems.length === 0) {
         currentZoom = 1;
         panX = 0;
@@ -299,17 +330,13 @@
         return;
       }
 
-      const wrapperH = wrapper.clientHeight;
-      const stageH = stage.offsetHeight;
+      const scaleX = stageDim.wrapperW / stageDim.stageW;
+      const scaleY = stageDim.wrapperH / stageDim.stageH;
 
-      if (stageH > wrapperH) {
-        currentZoom = wrapperH / stageH;
-      } else {
-        currentZoom = 1;
-      }
+      currentZoom = Math.min(scaleX, scaleY, 1);
 
       panX = 0;
-      panY = wrapperH - (stageH * currentZoom);
+      panY = stageDim.wrapperH - (stageDim.stageH * currentZoom);
       applyTransform();
     }
 
@@ -320,7 +347,7 @@
       item.innerHTML = `
         <button class="remove-btn" onclick="this.parentElement.remove(); fitToStage();">✕</button>
         <div class="building-info"><strong>${building.name}</strong></div>
-        <img src="${building.image_2d}" alt="${building.name}">
+        <img src="${building.image_2d}" alt="${building.name}" decoding="async">
       `;
       
       const img = item.querySelector('img');
@@ -337,7 +364,7 @@
         const card = document.createElement('div');
         card.className = 'card';
         card.onclick = () => addToStage(b);
-        card.innerHTML = `<img src="${b.thumbnail}" alt="${b.name}"><h3>${b.name}</h3>`;
+        card.innerHTML = `<img src="${b.thumbnail}" alt="${b.name}" decoding="async"><h3>${b.name}</h3>`;
         grid.appendChild(card);
       });
     }
