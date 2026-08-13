@@ -7,7 +7,7 @@
     "category": "Ancient Monuments",
     "height_m": 138,
     "year_built": -2560,
-    "thumbnail": "Cheops-pyramid.10cm.png",
+    "thumbnail": "Miniaturki/Cheops-pyramid.10cm.mini.jpg",
     "image_2d": "Cheops-pyramid.10cm.png"
   },
   {
@@ -18,7 +18,7 @@
     "category": "Skyscrapers",
     "height_m": 319,
     "year_built": 1930,
-    "thumbnail": "Chrysler-building-10cm.png",
+    "thumbnail": "Miniaturki/Chrysler-building-10cm.mini.jpg",
     "image_2d": "Chrysler-building-10cm.png"
   },
   {
@@ -29,7 +29,7 @@
     "category": "Ancient Monuments",
     "height_m": 48,
     "year_built": 80,
-    "thumbnail": "Colloseum.fixed.3arkany.10cm=px.png",
+    "thumbnail": "Miniaturki/Colloseum.fixed.3arkany.10cm=px.mini.jpg",
     "image_2d": "Colloseum.fixed.3arkany.10cm=px.png"
   },
   {
