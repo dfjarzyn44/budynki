@@ -89,7 +89,7 @@
     /* DUŻE PŁÓTNO BEZ SUWAKÓW */
     .stage-wrapper {
       width: 100%;
-      height: 850px; /* Powiększone płótno w pionie */
+      height: 850px; 
       min-height: 75vh;
       border: 2px solid #bbb;
       border-radius: 8px;
@@ -99,12 +99,12 @@
       cursor: grab;
       user-select: none;
 
-      /* Ukrycie suwaków w przeglądarkach */
-      scrollbar-width: none; /* Firefox */
-      -ms-overflow-style: none; /* IE / Edge */
+      /* Ukrycie suwaków */
+      scrollbar-width: none; 
+      -ms-overflow-style: none; 
     }
     .stage-wrapper::-webkit-scrollbar {
-      display: none; /* Chrome / Safari / Opera */
+      display: none; 
     }
     
     .stage-wrapper:active {
@@ -122,8 +122,8 @@
       padding: 70px 30px 20px 30px;
       box-sizing: border-box;
       background: linear-gradient(to bottom, #ffffff calc(100% - 20px), #4CAF50 calc(100% - 20px), #2e7d32 100%);
-      transform-origin: bottom left;
-      transition: transform 0.1s ease-out;
+      transform-origin: top left; /* Zmiana punktu odniesienia skalowania */
+      /* Usunięto transition, by zoom działał płynnie bez opóźnień skrolowania */
     }
     
     .building-item { 
@@ -280,17 +280,39 @@
       btn.parentElement.remove();
     }
 
+    // Zoom nakierowany bezpośrednio na kursor myszy
     function setupScrollZoom() {
       const wrapper = document.getElementById('stageWrapper');
+      const stage = document.getElementById('stage');
       
       wrapper.addEventListener('wheel', (e) => {
         e.preventDefault(); 
-        const zoomStep = 0.05; 
-        if (e.deltaY < 0) {
-          changeZoom(zoomStep);
-        } else {
-          changeZoom(-zoomStep);
-        }
+        
+        const zoomStep = 0.08; 
+        const oldZoom = currentZoom;
+        let newZoom = e.deltaY < 0 ? oldZoom * (1 + zoomStep) : oldZoom / (1 + zoomStep);
+        
+        if (newZoom < 0.05) newZoom = 0.05;
+        if (newZoom > 3) newZoom = 3;
+        if (newZoom === oldZoom) return;
+
+        // Pozycja myszy względem ramki obszaru roboczego
+        const rect = wrapper.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        const scrollLeft = wrapper.scrollLeft;
+        const scrollTop = wrapper.scrollTop;
+        const ratio = newZoom / oldZoom;
+
+        // Aplikacja nowej skali
+        currentZoom = newZoom;
+        document.getElementById('zoomVal').innerText = Math.round(currentZoom * 100) + '%';
+        stage.style.transform = `scale(${currentZoom})`;
+
+        // Przesunięcie widoku tak, aby kursor pozostał w tym samym miejscu obiektu
+        wrapper.scrollLeft = (scrollLeft + mouseX) * ratio - mouseX;
+        wrapper.scrollTop = (scrollTop + mouseY) * ratio - mouseY;
       }, { passive: false });
     }
 
@@ -331,10 +353,6 @@
       
       document.getElementById('zoomVal').innerText = Math.round(currentZoom * 100) + '%';
       document.getElementById('stage').style.transform = `scale(${currentZoom})`;
-    }
-
-    function changeZoom(delta) {
-      setZoom(currentZoom + delta);
     }
 
     loadData();
