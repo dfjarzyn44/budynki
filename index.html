@@ -40,9 +40,12 @@
       position: relative;
       user-select: none;
       touch-action: pan-y;
+      /* Ochrona przed miganiem przy skrolowaniu strony */
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
     }
 
-    /* TRYB PEŁNOEKRANOWY (DYNAMICZNY) */
+    /* TRYB PEŁNOEKRANOWY */
     .stage-wrapper.fullscreen {
       position: fixed;
       top: 0; left: 0;
@@ -81,10 +84,23 @@
       transform-origin: 0 0;
       position: absolute; 
       top: 0; left: 0;
+      /* Naprawa GPU renderowania - zapobiega znikaniu elementów */
+      will-change: transform;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
     }
     
     .building-item { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; position: relative; }
-    .building-item img { display: block; height: auto; width: auto; pointer-events: none; }
+    .building-item img { 
+      display: block; 
+      height: auto; 
+      width: auto; 
+      pointer-events: none; 
+      /* Zapobiega mruganiu samych grafik */
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      transform: translateZ(0);
+    }
     
     .remove-btn {
       position: absolute; top: -55px; background: #ff4d4d; color: white; border: none; border-radius: 50%;
@@ -189,7 +205,7 @@
       const scaledH = stageH * currentZoom;
       const scaledW = stageW * currentZoom;
 
-      // BLOKADA PIONOWA (Trawa u dołu)
+      // BLOKADA PIONOWA
       if (scaledH <= wrapperH) {
         panY = wrapperH - scaledH;
       } else {
@@ -197,10 +213,8 @@
         panY = Math.min(0, Math.max(minPanY, panY));
       }
 
-      // BLOKADA POZIOMA (Budynki od lewej)
-      if (scaledW <= wrapperW) {
-        panX = 0;
-      } else {
+      // BLOKADA POZIOMA (Pozwala na płynne przybliżanie do kursora bez zrywania do lewego rogu)
+      if (scaledW > wrapperW) {
         const minPanX = wrapperW - scaledW;
         panX = Math.min(0, Math.max(minPanX, panX));
       }
@@ -221,12 +235,12 @@
     function initInteractions() {
       const wrapper = document.getElementById('stageWrapper');
 
-      // ZOOM MYSZY (Inkrementalny)
+      // ZOOM MYSZY
       wrapper.addEventListener('wheel', (e) => {
         if (!isFullscreen) return;
         e.preventDefault();
         
-        const zoomStep = 0.1;
+        const zoomStep = 0.12;
         const factor = e.deltaY < 0 ? (1 + zoomStep) : (1 / (1 + zoomStep));
         const newZoom = Math.min(Math.max(currentZoom * factor, 0.05), 5);
         const actualFactor = newZoom / currentZoom;
@@ -257,7 +271,7 @@
         applyTransform();
       });
 
-      // OBSŁUGA DOTYKU (Płynny Pinch-to-zoom + Pan)
+      // OBSŁUGA DOTYKU
       let lastTouchDist = 0;
 
       wrapper.addEventListener('touchstart', (e) => {
@@ -311,7 +325,6 @@
         if (e.touches.length < 2) {
           lastTouchDist = 0;
         }
-        // Płynny powrót do gestu 1 palca po oderwaniu drugiego
         if (e.touches.length === 1) {
           isDown = true;
           startX = e.touches[0].clientX - panX;
@@ -356,7 +369,7 @@
       item.innerHTML = `
         <button class="remove-btn" onclick="this.parentElement.remove(); fitToStage();">✕</button>
         <div class="building-info"><strong>${building.name}</strong></div>
-        <img src="${building.image_2d}" alt="${building.name}" decoding="async">
+        <img src="${building.image_2d}" alt="${building.name}">
       `;
       
       const img = item.querySelector('img');
@@ -373,7 +386,7 @@
         const card = document.createElement('div');
         card.className = 'card';
         card.onclick = () => addToStage(b);
-        card.innerHTML = `<img src="${b.thumbnail}" alt="${b.name}" decoding="async"><h3>${b.name}</h3>`;
+        card.innerHTML = `<img src="${b.thumbnail}" alt="${b.name}"><h3>${b.name}</h3>`;
         grid.appendChild(card);
       });
     }
