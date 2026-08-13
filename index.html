@@ -124,7 +124,6 @@
     let buildingsData = [], currentZoom = 1, panX = 0, panY = 0;
     let isFullscreen = false;
     
-    // CACHE WYMIARÓW DLA PŁYNNOŚCI
     let stageDim = { wrapperW: 0, wrapperH: 0, stageW: 0, stageH: 0 };
     let ticking = false;
 
@@ -190,7 +189,7 @@
       const scaledH = stageH * currentZoom;
       const scaledW = stageW * currentZoom;
 
-      // BLOKADA PIONOWA
+      // BLOKADA PIONOWA (Trawa u dołu)
       if (scaledH <= wrapperH) {
         panY = wrapperH - scaledH;
       } else {
@@ -198,7 +197,7 @@
         panY = Math.min(0, Math.max(minPanY, panY));
       }
 
-      // BLOKADA POZIOMA
+      // BLOKADA POZIOMA (Budynki od lewej)
       if (scaledW <= wrapperW) {
         panX = 0;
       } else {
@@ -222,7 +221,7 @@
     function initInteractions() {
       const wrapper = document.getElementById('stageWrapper');
 
-      // ZOOM (Myszka)
+      // ZOOM MYSZY (Inkrementalny)
       wrapper.addEventListener('wheel', (e) => {
         if (!isFullscreen) return;
         e.preventDefault();
@@ -230,18 +229,19 @@
         const zoomStep = 0.1;
         const factor = e.deltaY < 0 ? (1 + zoomStep) : (1 / (1 + zoomStep));
         const newZoom = Math.min(Math.max(currentZoom * factor, 0.05), 5);
+        const actualFactor = newZoom / currentZoom;
         
         const rect = wrapper.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
 
-        panX = mouseX - (mouseX - panX) * (newZoom / currentZoom);
-        panY = mouseY - (mouseY - panY) * (newZoom / currentZoom);
+        panX = mouseX - (mouseX - panX) * actualFactor;
+        panY = mouseY - (mouseY - panY) * actualFactor;
         currentZoom = newZoom;
         applyTransform();
       }, { passive: false });
 
-      // PANNING (Myszka)
+      // PANNING MYSZY
       let isDown = false, startX, startY;
       wrapper.addEventListener('mousedown', (e) => {
         if (!isFullscreen || e.target.closest('.remove-btn')) return;
@@ -257,15 +257,11 @@
         applyTransform();
       });
 
-      // OBSŁUGA DOTYKU
-      let touchStartDist = 0;
-      let initialZoom = 1;
-      let touchStartMidX = 0, touchStartMidY = 0;
-      let initialPanX = 0, initialPanY = 0;
+      // OBSŁUGA DOTYKU (Płynny Pinch-to-zoom + Pan)
+      let lastTouchDist = 0;
 
       wrapper.addEventListener('touchstart', (e) => {
         if (!isFullscreen) return;
-        const rect = wrapper.getBoundingClientRect();
         
         if (e.touches.length === 1) {
           isDown = true;
@@ -273,15 +269,10 @@
           startY = e.touches[0].clientY - panY;
         } else if (e.touches.length === 2) {
           isDown = false;
-          touchStartDist = Math.hypot(
+          lastTouchDist = Math.hypot(
             e.touches[0].clientX - e.touches[1].clientX,
             e.touches[0].clientY - e.touches[1].clientY
           );
-          initialZoom = currentZoom;
-          touchStartMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
-          touchStartMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
-          initialPanX = panX;
-          initialPanY = panY;
         }
       }, { passive: true });
 
@@ -293,25 +284,43 @@
           panX = e.touches[0].clientX - startX;
           panY = e.touches[0].clientY - startY;
           applyTransform();
-        } else if (e.touches.length === 2 && touchStartDist > 0) {
+        } else if (e.touches.length === 2 && lastTouchDist > 0) {
           const currentDist = Math.hypot(
             e.touches[0].clientX - e.touches[1].clientX,
             e.touches[0].clientY - e.touches[1].clientY
           );
-          const factor = currentDist / touchStartDist;
-          const newZoom = Math.min(Math.max(initialZoom * factor, 0.05), 5);
+          if (currentDist === 0) return;
+
+          const factor = currentDist / lastTouchDist;
+          const newZoom = Math.min(Math.max(currentZoom * factor, 0.05), 5);
+          const actualFactor = newZoom / currentZoom;
 
           const currentMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
           const currentMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
 
-          panX = currentMidX - (touchStartMidX - initialPanX) * (newZoom / initialZoom);
-          panY = currentMidY - (touchStartMidY - initialPanY) * (newZoom / initialZoom);
+          panX = currentMidX - (currentMidX - panX) * actualFactor;
+          panY = currentMidY - (currentMidY - panY) * actualFactor;
+
           currentZoom = newZoom;
+          lastTouchDist = currentDist;
           applyTransform();
         }
       }, { passive: true });
 
-      wrapper.addEventListener('touchend', () => { isDown = false; touchStartDist = 0; });
+      wrapper.addEventListener('touchend', (e) => {
+        if (e.touches.length < 2) {
+          lastTouchDist = 0;
+        }
+        // Płynny powrót do gestu 1 palca po oderwaniu drugiego
+        if (e.touches.length === 1) {
+          isDown = true;
+          startX = e.touches[0].clientX - panX;
+          startY = e.touches[0].clientY - panY;
+        } else {
+          isDown = false;
+        }
+      });
+
       window.addEventListener('resize', () => fitToStage());
     }
 
