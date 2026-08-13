@@ -1,194 +1,90 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Building Size Comparison</title>
   <style>
-    body { 
-      font-family: Arial, sans-serif; 
-      margin: 20px; 
-      background-color: #f4f4f9; 
-      color: #333; 
-    }
+    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; color: #333; }
     h1 { text-align: center; }
     
-    /* PANELE FILTRÓW I WYSZUKIWARKI */
-    .controls { 
-      display: flex; 
-      flex-wrap: wrap; 
-      gap: 10px; 
-      margin-bottom: 20px; 
-      justify-content: center; 
-    }
-    input, select { 
-      padding: 10px; 
-      font-size: 16px; 
-      border: 1px solid #ccc; 
-      border-radius: 5px; 
-    }
+    .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; justify-content: center; }
+    input, select { padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; }
     
-    /* KAFELKI Z BUDYNKAMI NA GÓRZE */
     .grid { 
-      display: grid; 
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
-      gap: 15px; 
-      margin-bottom: 25px; 
-      height: 200px; 
-      overflow-y: auto; 
-      border: 1px solid #ddd; 
-      padding: 10px; 
-      background: #fff; 
-      border-radius: 8px; 
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
+      gap: 15px; margin-bottom: 25px; height: 200px; overflow-y: auto; 
+      border: 1px solid #ddd; padding: 10px; background: #fff; border-radius: 8px; 
     }
-    .card { 
-      background: white; 
-      border: 2px solid #ddd; 
-      border-radius: 8px; 
-      padding: 10px; 
-      text-align: center; 
-      cursor: pointer; 
-    }
+    .card { background: white; border: 2px solid #ddd; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; }
     .card:hover { border-color: #007bff; }
-    .card img { 
-      width: 100%; 
-      height: 90px; 
-      object-fit: cover; 
-      border-radius: 5px; 
-      background-color: #eee; 
-    }
+    .card img { width: 100%; height: 90px; object-fit: cover; border-radius: 5px; background-color: #eee; }
     .card h3 { margin: 8px 0 0 0; font-size: 13px; }
 
-    /* NAGŁÓWEK PŁÓTNA */
-    .stage-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .zoom-controls {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: #fff;
-      padding: 6px 12px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    .zoom-controls button {
-      padding: 4px 10px;
-      font-size: 14px;
-      font-weight: bold;
-      cursor: pointer;
-      border: 1px solid #bbb;
-      background: #f0f0f0;
-      border-radius: 4px;
-    }
-    .zoom-controls button:hover { background: #e0e0e0; }
+    .stage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .zoom-controls { background: #fff; padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; }
 
-    /* OKNO PODGLĄDU PŁÓTNA */
+    /* WIDOK PŁÓTNA - "Okno" przez które patrzymy */
     .stage-wrapper {
       width: 100%;
-      height: 700px; 
+      height: 70vh; /* Duży obszar roboczy */
       border: 2px solid #bbb;
       border-radius: 8px;
       background: #ffffff;
-      overflow: hidden;
+      overflow: hidden; /* Ukrywamy suwaki, bo używamy pan/zoom */
       position: relative;
       cursor: grab;
       user-select: none;
     }
     .stage-wrapper:active { cursor: grabbing; }
 
-    /* PŁÓTNO Z TRAWĄ NA DOLE */
+    /* SAMO PŁÓTNO - Kontener na budynki z Flexboxem */
     #stage { 
       display: flex; 
-      align-items: flex-end; 
+      align-items: flex-end; /* Budynki zawsze na dole */
       justify-content: flex-start; 
       gap: 30px; 
-      width: max-content;
-      min-width: 100%;
-      height: 100%;
-      padding: 70px 30px 20px 30px;
+      padding: 20px 30px;
       box-sizing: border-box;
-      background: linear-gradient(to bottom, #ffffff calc(100% - 20px), #4CAF50 calc(100% - 20px), #2e7d32 100%);
+      min-height: 100%; /* Rozciąga się na wysokość okna */
+      min-width: 100%;
+      width: max-content;
+      /* Trawa na dole */
+      background: linear-gradient(to bottom, transparent calc(100% - 20px), #4CAF50 calc(100% - 20px), #2e7d32 100%);
       transform-origin: 0 0;
-      position: absolute;
+      position: absolute; /* Umożliwia transformy */
       top: 0;
       left: 0;
       will-change: transform;
     }
     
-    .building-item { 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      flex-shrink: 0; 
-      position: relative;
-    }
-    
-    .building-item img { 
-      display: block !important; 
-      height: auto !important; 
-      max-height: none !important; 
-      width: auto !important; 
-      max-width: none !important; 
-      pointer-events: none;
-    }
+    .building-item { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; position: relative; }
+    .building-item img { display: block; height: auto; width: auto; pointer-events: none; }
     
     .remove-btn {
-      position: absolute;
-      top: -55px;
-      background: #ff4d4d;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 48px;
-      height: 48px;
-      font-size: 26px;
-      font-weight: bold;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-      z-index: 10;
+      position: absolute; top: -55px; background: #ff4d4d; color: white; border: none; border-radius: 50%;
+      width: 48px; height: 48px; font-size: 26px; cursor: pointer; z-index: 10;
     }
-    .remove-btn:hover { background: #cc0000; }
-    
     .building-info { 
-      margin-bottom: 6px; 
-      font-size: 12px; 
-      text-align: center; 
-      background: rgba(255, 255, 255, 0.95); 
-      padding: 3px 6px; 
-      border-radius: 4px; 
-      border: 1px solid #ccc;
-      white-space: nowrap;
+      margin-bottom: 6px; font-size: 12px; text-align: center; background: rgba(255,255,255,0.95); 
+      padding: 3px 6px; border: 1px solid #ccc; border-radius: 4px; white-space: nowrap;
     }
   </style>
 </head>
 <body>
 
   <h1>Building Size Comparison</h1>
-
   <div class="controls">
     <input type="text" id="searchInput" placeholder="Search building...">
     <select id="categoryFilter"><option value="">All Categories</option></select>
     <select id="countryFilter"><option value="">All Countries</option></select>
   </div>
-
   <div class="grid" id="buildingsGrid"></div>
 
   <div class="stage-header">
     <h2>Comparison Area</h2>
     <div class="zoom-controls">
-      <label><strong>Scale:</strong></label>
-      <span id="zoomVal">100%</span>
-      <button onclick="resetZoom()">Reset 100%</button>
+      Scale: <span id="zoomVal">100%</span> <button onclick="resetZoom()">Reset</button>
     </div>
   </div>
 
@@ -197,45 +93,106 @@
   </div>
 
   <script>
-    let buildingsData = [];
-    let currentZoom = 1;
-    let panX = 0;
-    let panY = 0;
+    let buildingsData = [], currentZoom = 1, panX = 0, panY = 0;
 
-    // Pobieranie danych z pliku budynki.json w Twoim repozytorium
     async function loadData() {
       try {
         const response = await fetch('budynki.json');
-        if (!response.ok) {
-          throw new Error(`Błąd HTTP! Stan: ${response.status}`);
-        }
         buildingsData = await response.json();
-        initApp();
-      } catch (error) {
-        console.error("Błąd podczas ładowania danych z budynki.json:", error);
+        renderGrid(buildingsData);
+        setupFilters();
+        initInteractions();
+      } catch (e) {
+        console.error("Błąd ładowania JSON:", e);
       }
     }
 
-    function initApp() {
-      setupFilters();
-      renderGrid(buildingsData);
-      setupScrollZoom();
-      setupPan();
-      clampPan();
-      updateTransform();
+    // Blokada granicy: trawa nie może odlecieć od dołu okna
+    function clampPan() {
+      const wrapper = document.getElementById('stageWrapper');
+      const stage = document.getElementById('stage');
+
+      const wrapperW = wrapper.clientWidth;
+      const wrapperH = wrapper.clientHeight;
+      const stageW = Math.max(stage.offsetWidth, wrapperW);
+      const stageH = Math.max(stage.offsetHeight, wrapperH);
+
+      // Blokada w pionie - linia trawy przytwierdzona do dołu
+      const minPanY = wrapperH - (stageH * currentZoom);
+      const maxPanY = 0;
+      panY = Math.min(maxPanY, Math.max(minPanY, panY));
+
+      // Blokada w poziomie
+      const minPanX = wrapperW - (stageW * currentZoom);
+      const maxPanX = 0;
+      if (stageW * currentZoom <= wrapperW) {
+        panX = 0;
+      } else {
+        panX = Math.min(maxPanX, Math.max(minPanX, panX));
+      }
     }
 
-    function setupFilters() {
-      const categories = [...new Set(buildingsData.map(b => b.category))].filter(Boolean);
-      const countries = [...new Set(buildingsData.map(b => b.country))].filter(Boolean);
-      
-      const catSelect = document.getElementById('categoryFilter');
-      catSelect.innerHTML = '<option value="">All Categories</option>';
-      categories.forEach(cat => catSelect.innerHTML += `<option value="${cat}">${cat}</option>`);
-      
-      const countSelect = document.getElementById('countryFilter');
-      countSelect.innerHTML = '<option value="">All Countries</option>';
-      countries.forEach(c => countSelect.innerHTML += `<option value="${c}">${c}</option>`);
+    function initInteractions() {
+      const wrapper = document.getElementById('stageWrapper');
+
+      // ZOOM NA KURSOR
+      wrapper.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const zoomStep = 0.1;
+        const factor = e.deltaY < 0 ? (1 + zoomStep) : (1 / (1 + zoomStep));
+        const newZoom = Math.min(Math.max(currentZoom * factor, 1), 5); // Minimum 100%
+        
+        const rect = wrapper.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        panX = mouseX - (mouseX - panX) * (newZoom / currentZoom);
+        panY = mouseY - (mouseY - panY) * (newZoom / currentZoom);
+        currentZoom = newZoom;
+        applyTransform();
+      }, { passive: false });
+
+      // PANNING
+      let isDown = false, startX, startY;
+      wrapper.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.remove-btn')) return;
+        isDown = true;
+        startX = e.clientX - panX;
+        startY = e.clientY - panY;
+      });
+      window.addEventListener('mouseup', () => isDown = false);
+      wrapper.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        panX = e.clientX - startX;
+        panY = e.clientY - startY;
+        applyTransform();
+      });
+    }
+
+    function applyTransform() {
+      clampPan();
+      document.getElementById('zoomVal').innerText = Math.round(currentZoom * 100) + '%';
+      document.getElementById('stage').style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
+    }
+
+    function resetZoom() { 
+      currentZoom = 1; 
+      panX = 0; 
+      panY = 0; 
+      applyTransform(); 
+    }
+
+    function addToStage(building) {
+      const stage = document.getElementById('stage');
+      const item = document.createElement('div');
+      item.className = 'building-item';
+      item.innerHTML = `
+        <button class="remove-btn" onclick="this.parentElement.remove(); applyTransform();">✕</button>
+        <div class="building-info"><strong>${building.name}</strong></div>
+        <img src="${building.image_2d}" alt="${building.name}">
+      `;
+      stage.appendChild(item);
+      applyTransform();
     }
 
     function renderGrid(data) {
@@ -250,140 +207,39 @@
       });
     }
 
+    function setupFilters() {
+      const catSelect = document.getElementById('categoryFilter');
+      const countrySelect = document.getElementById('countryFilter');
+      
+      const categories = [...new Set(buildingsData.map(b => b.category))].filter(Boolean);
+      const countries = [...new Set(buildingsData.map(b => b.country))].filter(Boolean);
+
+      catSelect.innerHTML = '<option value="">All Categories</option>';
+      categories.forEach(c => catSelect.innerHTML += `<option value="${c}">${c}</option>`);
+
+      countrySelect.innerHTML = '<option value="">All Countries</option>';
+      countries.forEach(c => countrySelect.innerHTML += `<option value="${c}">${c}</option>`);
+
+      document.getElementById('searchInput').addEventListener('input', filterData);
+      catSelect.addEventListener('change', filterData);
+      countrySelect.addEventListener('change', filterData);
+    }
+
     function filterData() {
       const search = document.getElementById('searchInput').value.toLowerCase();
       const cat = document.getElementById('categoryFilter').value;
-      const count = document.getElementById('countryFilter').value;
-      renderGrid(buildingsData.filter(b => 
-        (b.name.toLowerCase().includes(search)) && 
-        (cat === '' || b.category === cat) && 
-        (count === '' || b.country === count)
-      ));
-    }
+      const country = document.getElementById('countryFilter').value;
 
-    document.getElementById('searchInput').addEventListener('input', filterData);
-    document.getElementById('categoryFilter').addEventListener('change', filterData);
-    document.getElementById('countryFilter').addEventListener('change', filterData);
-
-    // Dodawanie budynku z bazy na płótno
-    function addToStage(building) {
-      const stage = document.getElementById('stage');
-      const item = document.createElement('div');
-      item.className = 'building-item';
-
-      item.innerHTML = `
-        <button class="remove-btn" onclick="removeItem(this)" title="Remove building">✕</button>
-        <div class="building-info"><strong>${building.name}</strong></div>
-        <img src="${building.image_2d}" alt="${building.name}">
-      `;
-      
-      stage.appendChild(item);
-      clampPan();
-      updateTransform();
-    }
-
-    function removeItem(btn) {
-      btn.parentElement.remove();
-      clampPan();
-      updateTransform();
-    }
-
-    // Blokada granic: trawa nie może "odlecieć" w górę ani od odsłonić tła pod spodem
-    function clampPan() {
-      const wrapper = document.getElementById('stageWrapper');
-      const stage = document.getElementById('stage');
-      
-      const wrapperWidth = wrapper.clientWidth;
-      const wrapperHeight = wrapper.clientHeight;
-      const stageWidth = Math.max(stage.offsetWidth, wrapperWidth);
-      const stageHeight = stage.offsetHeight;
-
-      // Trzymanie linii trawy przy dolnej krawędzi
-      const minPanY = wrapperHeight - (stageHeight * currentZoom);
-      const maxPanY = 0;
-      panY = Math.min(maxPanY, Math.max(minPanY, panY));
-
-      // Blokowanie krawędzi poziomych
-      const minPanX = wrapperWidth - (stageWidth * currentZoom);
-      const maxPanX = 0;
-      if (stageWidth * currentZoom <= wrapperWidth) {
-        panX = 0;
-      } else {
-        panX = Math.min(maxPanX, Math.max(minPanX, panX));
-      }
-    }
-
-    function updateTransform() {
-      document.getElementById('zoomVal').innerText = Math.round(currentZoom * 100) + '%';
-      const stage = document.getElementById('stage');
-      stage.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
-    }
-
-    // Zoom nakierowany dokładnie w pozycję kursora
-    function setupScrollZoom() {
-      const wrapper = document.getElementById('stageWrapper');
-      
-      wrapper.addEventListener('wheel', (e) => {
-        e.preventDefault(); 
-        
-        const zoomStep = 0.1; 
-        const factor = e.deltaY < 0 ? (1 + zoomStep) : (1 / (1 + zoomStep));
-        
-        let newZoom = currentZoom * factor;
-        if (newZoom < 1) newZoom = 1; // Zabezpieczenie przed zmniejszaniem poniżej 100%
-        if (newZoom > 5) newZoom = 5;
-        if (newZoom === currentZoom) return;
-
-        const rect = wrapper.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-
-        // Przeliczanie pozycji punktu pod kursorem po zmianie skali
-        panX = mouseX - (mouseX - panX) * (newZoom / currentZoom);
-        panY = mouseY - (mouseY - panY) * (newZoom / currentZoom);
-        currentZoom = newZoom;
-
-        clampPan();
-        updateTransform();
-      }, { passive: false });
-    }
-
-    // Przesuwanie myszką (Panning)
-    function setupPan() {
-      const wrapper = document.getElementById('stageWrapper');
-      let isDown = false;
-      let startX, startY;
-
-      wrapper.addEventListener('mousedown', (e) => {
-        if (e.target.closest('.remove-btn')) return;
-
-        isDown = true;
-        startX = e.clientX - panX;
-        startY = e.clientY - panY;
+      const filtered = buildingsData.filter(b => {
+        const matchSearch = b.name.toLowerCase().includes(search);
+        const matchCat = !cat || b.category === cat;
+        const matchCountry = !country || b.country === country;
+        return matchSearch && matchCat && matchCountry;
       });
 
-      window.addEventListener('mouseup', () => { isDown = false; });
-      wrapper.addEventListener('mouseleave', () => { isDown = false; });
-
-      wrapper.addEventListener('mousemove', (e) => {
-        if (!isDown) return;
-        e.preventDefault();
-        panX = e.clientX - startX;
-        panY = e.clientY - startY;
-        clampPan();
-        updateTransform();
-      });
+      renderGrid(filtered);
     }
 
-    function resetZoom() {
-      currentZoom = 1;
-      panX = 0;
-      panY = 0;
-      clampPan();
-      updateTransform();
-    }
-
-    // Inicjalizacja przy starcie strony
     loadData();
   </script>
 </body>
