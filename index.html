@@ -68,7 +68,7 @@
     .zoom-controls {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
       background: #fff;
       padding: 6px 12px;
       border: 1px solid #ccc;
@@ -105,7 +105,7 @@
       width: max-content;
       min-width: 100%;
       min-height: 100%;
-      padding: 60px 30px 0px 30px; 
+      padding: 70px 30px 0px 30px; /* Zwiększony górny padding dla większych przycisków X */
       box-sizing: border-box;
       background: linear-gradient(to bottom, #ffffff calc(100% - 20px), #4CAF50 calc(100% - 20px), #2e7d32 100%);
       transform-origin: bottom left;
@@ -129,22 +129,23 @@
       max-width: none !important; 
     }
     
+    /* Powiększony przycisk X */
     .remove-btn {
       position: absolute;
-      top: -35px;
+      top: -55px; /* Podniesiony wyżej, żeby nie zachodził na tekst */
       background: #ff4d4d;
       color: white;
       border: none;
       border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      font-size: 13px;
+      width: 48px;  /* 2x większy */
+      height: 48px; /* 2x większy */
+      font-size: 26px; /* 2x większa czcionka */
       font-weight: bold;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3); /* Lekko mocniejszy cień */
       z-index: 10;
     }
     .remove-btn:hover { background: #cc0000; }
@@ -176,16 +177,13 @@
   <div class="stage-header">
     <h2>Comparison Area</h2>
     <div class="zoom-controls">
-      <label for="zoomRange"><strong>Scale:</strong></label>
-      <button onclick="changeZoom(-0.1)">−</button>
-      <input type="range" id="zoomRange" min="0.05" max="2" step="0.05" value="1" oninput="setZoom(this.value)">
-      <button onclick="changeZoom(0.1)">+</button>
+      <label><strong>Scale:</strong></label>
       <span id="zoomVal">100%</span>
-      <button onclick="setZoom(1)">100%</button>
+      <button onclick="setZoom(1)">Reset 100%</button>
     </div>
   </div>
 
-  <div class="stage-wrapper">
+  <div class="stage-wrapper" id="stageWrapper">
     <div id="stage"></div>
   </div>
 
@@ -209,6 +207,7 @@
     function initApp() {
       setupFilters();
       renderGrid(buildingsData);
+      setupScrollZoom();
     }
 
     function setupFilters() {
@@ -293,16 +292,36 @@
         }
       });
 
-      const calculatedHeight = (maxHeight + 80) * currentZoom + 40;
+      // Zwiększono margines błędu ze względu na wyższe przyciski X
+      const calculatedHeight = (maxHeight + 100) * currentZoom + 40;
       document.querySelector('.stage-wrapper').style.height = Math.max(300, calculatedHeight) + 'px';
+    }
+
+    // Nowa funkcja obsługująca zoomowanie rolką / gładzikiem
+    function setupScrollZoom() {
+      const wrapper = document.getElementById('stageWrapper');
+      
+      wrapper.addEventListener('wheel', (e) => {
+        // Blokujemy domyślne zachowanie przeglądarki (żeby strona nie jeździła w górę i dół)
+        e.preventDefault(); 
+        
+        // Czułość powiększania
+        const zoomStep = 0.05; 
+        
+        // e.deltaY > 0 oznacza scrollowanie w dół (oddalanie), < 0 w górę (przybliżanie)
+        if (e.deltaY < 0) {
+          changeZoom(zoomStep);
+        } else {
+          changeZoom(-zoomStep);
+        }
+      }, { passive: false });
     }
 
     function setZoom(val) {
       currentZoom = parseFloat(val);
       if (currentZoom < 0.05) currentZoom = 0.05;
-      if (currentZoom > 2) currentZoom = 2;
+      if (currentZoom > 2.5) currentZoom = 2.5; // Zwiększyłem max zoom dla wygody
       
-      document.getElementById('zoomRange').value = currentZoom;
       document.getElementById('zoomVal').innerText = Math.round(currentZoom * 100) + '%';
       document.getElementById('stage').style.transform = `scale(${currentZoom})`;
       updateStageHeight();
