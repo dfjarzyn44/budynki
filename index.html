@@ -15,12 +15,21 @@
     
     .grid { 
       display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
-      gap: 15px; margin-bottom: 25px; height: 200px; overflow-y: auto; 
+      gap: 15px; margin-bottom: 25px; height: 220px; overflow-y: auto; 
       border: 1px solid #ddd; padding: 10px; background: #fff; border-radius: 8px; 
     }
-    .card { background: white; border: 2px solid #ddd; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; }
+    .card { background: white; border: 2px solid #ddd; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; }
     .card:hover { border-color: #007bff; }
-    .card img { width: 100%; height: 90px; object-fit: cover; border-radius: 5px; background-color: #eee; }
+    
+    /* POPRAWKA CENTROWANIA I DOPASOWANIA MINIATURKI */
+    .card img { 
+      width: 100%; 
+      height: 110px; 
+      object-fit: contain; /* Pełny obrazek w kafelku, nic nie ścina */
+      object-position: center; 
+      border-radius: 5px; 
+      background-color: #f9f9f9; 
+    }
     .card h3 { margin: 8px 0 0 0; font-size: 13px; }
 
     .stage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
@@ -75,11 +84,10 @@
       align-items: flex-end; 
       justify-content: flex-start; 
       gap: 30px; 
-      padding: 20px 30px 25px 30px; /* Dolny padding 25px zgadza się ze startem trawy */
+      padding: 20px 30px 25px 30px;
       box-sizing: border-box;
       min-width: 100%;
       width: max-content;
-      /* Trawa zaczyna się dokładnie w miejscu, gdzie kończy się spód budynków */
       background: linear-gradient(to bottom, transparent calc(100% - 25px), #4CAF50 calc(100% - 25px), #2e7d32 100%);
       transform-origin: 0 0;
       position: absolute; 
@@ -207,18 +215,14 @@
       const scaledH = stageH * currentZoom;
       const scaledW = stageW * currentZoom;
 
-      // STALOWA BLOKADA ZIEMI DÓŁ EKRANU
       if (scaledH <= wrapperH) {
-        // Gdy powiększenie jest małe, trawa na sztywno przylega do dołu okna
         panY = wrapperH - scaledH;
       } else {
-        // Gdy powiększenie jest duże, trawa leży na dole okna (minPanY) lub niżej (maxPanY = 0)
         const minPanY = wrapperH - scaledH; 
         const maxPanY = 0; 
         panY = Math.min(maxPanY, Math.max(minPanY, panY));
       }
 
-      // BLOKADA POZIOMA
       if (scaledW > wrapperW) {
         const minPanX = wrapperW - scaledW;
         panX = Math.min(0, Math.max(minPanX, panX));
@@ -242,7 +246,6 @@
     function initInteractions() {
       const wrapper = document.getElementById('stageWrapper');
 
-      // ZOOM MYSZY
       wrapper.addEventListener('wheel', (e) => {
         if (!isFullscreen) return;
         e.preventDefault();
@@ -262,7 +265,6 @@
         applyTransform();
       }, { passive: false });
 
-      // PANNING MYSZY
       let isDown = false, startX, startY;
       wrapper.addEventListener('mousedown', (e) => {
         if (!isFullscreen || e.target.closest('.remove-btn')) return;
@@ -278,7 +280,6 @@
         applyTransform();
       });
 
-      // OBSŁUGA DOTYKU
       let lastTouchDist = 0;
 
       wrapper.addEventListener('touchstart', (e) => {
