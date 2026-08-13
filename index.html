@@ -42,7 +42,7 @@
       touch-action: pan-y;
     }
 
-    /* TRYB PEŁNOEKRANOWY (Z OBSŁUGĄ MOBILNEGO VIEWPORTU 100dvh) */
+    /* TRYB PEŁNOEKRANOWY */
     .stage-wrapper.fullscreen {
       position: fixed;
       top: 0; left: 0;
@@ -75,22 +75,33 @@
       align-items: flex-end; 
       justify-content: flex-start; 
       gap: 30px; 
-      padding: 20px 30px 40px 30px; /* Dodatkowa przestrzeń na trawę */
+      padding: 20px 30px 25px 30px; /* Dolny padding 25px zgadza się ze startem trawy */
       box-sizing: border-box;
       min-width: 100%;
       width: max-content;
-      background: linear-gradient(to bottom, transparent calc(100% - 35px), #4CAF50 calc(100% - 35px), #2e7d32 100%);
+      /* Trawa zaczyna się dokładnie w miejscu, gdzie kończy się spód budynków */
+      background: linear-gradient(to bottom, transparent calc(100% - 25px), #4CAF50 calc(100% - 25px), #2e7d32 100%);
       transform-origin: 0 0;
       position: absolute; 
       top: 0; left: 0;
     }
     
-    .building-item { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; position: relative; }
+    .building-item { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      flex-shrink: 0; 
+      position: relative;
+      margin: 0;
+      padding: 0;
+    }
     .building-item img { 
       display: block; 
       height: auto; 
       width: auto; 
       pointer-events: none;
+      margin: 0;
+      padding: 0;
     }
     
     .remove-btn {
@@ -187,7 +198,7 @@
       });
 
       const wrapperH = wrapper.clientHeight;
-      const neededH = maxBHeight > 0 ? (maxBHeight + 300) : wrapperH;
+      const neededH = maxBHeight > 0 ? (maxBHeight + 100) : wrapperH;
       stage.style.height = neededH + 'px';
     }
 
@@ -196,18 +207,23 @@
       const scaledH = stageH * currentZoom;
       const scaledW = stageW * currentZoom;
 
-      // ELASTYCZNA BLOKADA PIONOWA (Umożliwia swobodne przewijanie na telefonie)
-      const minPanY = Math.min(0, wrapperH - scaledH);
-      const maxPanY = Math.max(0, wrapperH - scaledH);
-      panY = Math.min(maxPanY, Math.max(minPanY, panY));
+      // STALOWA BLOKADA ZIEMI DÓŁ EKRANU
+      if (scaledH <= wrapperH) {
+        // Gdy powiększenie jest małe, trawa na sztywno przylega do dołu okna
+        panY = wrapperH - scaledH;
+      } else {
+        // Gdy powiększenie jest duże, trawa leży na dole okna (minPanY) lub niżej (maxPanY = 0)
+        const minPanY = wrapperH - scaledH; 
+        const maxPanY = 0; 
+        panY = Math.min(maxPanY, Math.max(minPanY, panY));
+      }
 
       // BLOKADA POZIOMA
       if (scaledW > wrapperW) {
         const minPanX = wrapperW - scaledW;
         panX = Math.min(0, Math.max(minPanX, panX));
       } else {
-        const maxPanX = Math.max(0, wrapperW - scaledW);
-        panX = Math.min(maxPanX, Math.max(0, panX));
+        panX = 0;
       }
     }
 
