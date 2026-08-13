@@ -32,7 +32,7 @@
       grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
       gap: 15px; 
       margin-bottom: 25px; 
-      height: 250px; 
+      height: 200px; 
       overflow-y: auto; 
       border: 1px solid #ddd; 
       padding: 10px; 
@@ -86,15 +86,20 @@
     }
     .zoom-controls button:hover { background: #e0e0e0; }
 
+    /* USZTYWNIENIE PŁÓTNA - stała wysokość i chwytanie myszką */
     .stage-wrapper {
       width: 100%;
-      height: 300px;
+      height: 550px; /* Sztywna wysokość ramki, nic nie skacze */
       border: 2px solid #bbb;
       border-radius: 8px;
       background: #ffffff;
       overflow: auto;
       position: relative;
-      transition: height 0.2s ease-out;
+      cursor: grab; /* Kursor rączki do przesuwania */
+      user-select: none; /* Zapobiega przypadkowemu zaznaczaniu tekstu przy przeciąganiu */
+    }
+    .stage-wrapper:active {
+      cursor: grabbing; /* Kursor zamkniętej dłoni przy trzymaniu kliknięcia */
     }
 
     #stage { 
@@ -105,7 +110,7 @@
       width: max-content;
       min-width: 100%;
       min-height: 100%;
-      padding: 70px 30px 0px 30px; /* Zwiększony górny padding dla większych przycisków X */
+      padding: 70px 30px 20px 30px;
       box-sizing: border-box;
       background: linear-gradient(to bottom, #ffffff calc(100% - 20px), #4CAF50 calc(100% - 20px), #2e7d32 100%);
       transform-origin: bottom left;
@@ -118,7 +123,6 @@
       align-items: center; 
       flex-shrink: 0; 
       position: relative;
-      margin-bottom: 20px;
     }
     
     .building-item img { 
@@ -127,25 +131,25 @@
       max-height: none !important; 
       width: auto !important; 
       max-width: none !important; 
+      pointer-events: none; /* Zapobiega przeciąganiu samego obrazka */
     }
     
-    /* Powiększony przycisk X */
     .remove-btn {
       position: absolute;
-      top: -55px; /* Podniesiony wyżej, żeby nie zachodził na tekst */
+      top: -55px;
       background: #ff4d4d;
       color: white;
       border: none;
       border-radius: 50%;
-      width: 48px;  /* 2x większy */
-      height: 48px; /* 2x większy */
-      font-size: 26px; /* 2x większa czcionka */
+      width: 48px;
+      height: 48px;
+      font-size: 26px;
       font-weight: bold;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3); /* Lekko mocniejszy cień */
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
       z-index: 10;
     }
     .remove-btn:hover { background: #cc0000; }
@@ -208,6 +212,7 @@
       setupFilters();
       renderGrid(buildingsData);
       setupScrollZoom();
+      setupPan(); // Obsługa chwytania i przesuwania płótna
     }
 
     function setupFilters() {
@@ -260,55 +265,19 @@
       `;
       
       stage.appendChild(item);
-
-      const img = item.querySelector('img');
-      if (img.complete) {
-        updateStageHeight();
-      } else {
-        img.addEventListener('load', updateStageHeight);
-        img.addEventListener('error', () => {
-          console.error('Błąd ładowania obrazka:', building.image_2d);
-        });
-      }
     }
 
     function removeItem(btn) {
       btn.parentElement.remove();
-      updateStageHeight();
     }
 
-    function updateStageHeight() {
-      const stage = document.getElementById('stage');
-      const images = stage.querySelectorAll('.building-item img');
-      if (images.length === 0) {
-        document.querySelector('.stage-wrapper').style.height = '300px';
-        return;
-      }
-      
-      let maxHeight = 0;
-      images.forEach(img => {
-        if (img.offsetHeight > maxHeight) {
-          maxHeight = img.offsetHeight;
-        }
-      });
-
-      // Zwiększono margines błędu ze względu na wyższe przyciski X
-      const calculatedHeight = (maxHeight + 100) * currentZoom + 40;
-      document.querySelector('.stage-wrapper').style.height = Math.max(300, calculatedHeight) + 'px';
-    }
-
-    // Nowa funkcja obsługująca zoomowanie rolką / gładzikiem
+    // Zoom kółkiem / gładzikiem
     function setupScrollZoom() {
       const wrapper = document.getElementById('stageWrapper');
       
       wrapper.addEventListener('wheel', (e) => {
-        // Blokujemy domyślne zachowanie przeglądarki (żeby strona nie jeździła w górę i dół)
         e.preventDefault(); 
-        
-        // Czułość powiększania
         const zoomStep = 0.05; 
-        
-        // e.deltaY > 0 oznacza scrollowanie w dół (oddalanie), < 0 w górę (przybliżanie)
         if (e.deltaY < 0) {
           changeZoom(zoomStep);
         } else {
@@ -317,14 +286,45 @@
       }, { passive: false });
     }
 
+    // Obsługa przesuwania lewym przyciskiem myszy
+    function setupPan() {
+      const wrapper = document.getElementById('stageWrapper');
+      let isDown = false;
+      let startX, startY, scrollLeft, scrollTop;
+
+      wrapper.addEventListener('mousedown', (e) => {
+        // Ignoruj kliknięcie, jeśli trafiono w przycisk usuwania X
+        if (e.target.closest('.remove-btn')) return;
+
+        isDown = true;
+        startX = e.pageX - wrapper.offsetLeft;
+        startY = e.pageY - wrapper.offsetTop;
+        scrollLeft = wrapper.scrollLeft;
+        scrollTop = wrapper.scrollTop;
+      });
+
+      wrapper.addEventListener('mouseleave', () => { isDown = false; });
+      wrapper.addEventListener('mouseup', () => { isDown = false; });
+
+      wrapper.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - wrapper.offsetLeft;
+        const y = e.pageY - wrapper.offsetTop;
+        const walkX = (x - startX) * 1.5; // Prędkość przesuwania poziom
+        const walkY = (y - startY) * 1.5; // Prędkość przesuwania pion
+        wrapper.scrollLeft = scrollLeft - walkX;
+        wrapper.scrollTop = scrollTop - walkY;
+      });
+    }
+
     function setZoom(val) {
       currentZoom = parseFloat(val);
       if (currentZoom < 0.05) currentZoom = 0.05;
-      if (currentZoom > 2.5) currentZoom = 2.5; // Zwiększyłem max zoom dla wygody
+      if (currentZoom > 3) currentZoom = 3;
       
       document.getElementById('zoomVal').innerText = Math.round(currentZoom * 100) + '%';
       document.getElementById('stage').style.transform = `scale(${currentZoom})`;
-      updateStageHeight();
     }
 
     function changeZoom(delta) {
