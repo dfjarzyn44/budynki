@@ -86,7 +86,7 @@
     }
     .zoom-controls button:hover { background: #e0e0e0; }
 
-    /* DUŻE PŁÓTNO BEZ SUWAKÓW */
+    /* OBSZAR ROBOCZY KADRU (VIEWPORT) */
     .stage-wrapper {
       width: 100%;
       height: 850px; 
@@ -94,36 +94,32 @@
       border: 2px solid #bbb;
       border-radius: 8px;
       background: #ffffff;
-      overflow: auto;
+      overflow: hidden; /* Wyłączenie natywnych scrollbarów */
       position: relative;
       cursor: grab;
       user-select: none;
-
-      /* Ukrycie suwaków */
-      scrollbar-width: none; 
-      -ms-overflow-style: none; 
-    }
-    .stage-wrapper::-webkit-scrollbar {
-      display: none; 
     }
     
     .stage-wrapper:active {
       cursor: grabbing;
     }
 
+    /* PŁÓTNO KINEMATYCZNE */
     #stage { 
       display: flex; 
       align-items: flex-end; 
       justify-content: flex-start; 
       gap: 30px; 
-      width: max-content;
-      min-width: 100%;
-      min-height: 100%;
+      width: 100%;
+      height: 100%;
       padding: 70px 30px 20px 30px;
       box-sizing: border-box;
       background: linear-gradient(to bottom, #ffffff calc(100% - 20px), #4CAF50 calc(100% - 20px), #2e7d32 100%);
-      transform-origin: top left; /* Zmiana punktu odniesienia skalowania */
-      /* Usunięto transition, by zoom działał płynnie bez opóźnień skrolowania */
+      transform-origin: 0 0; /* Punkt wyjścia macierzy transformacji */
+      position: absolute;
+      top: 0;
+      left: 0;
+      will-change: transform;
     }
     
     .building-item { 
@@ -192,7 +188,7 @@
     <div class="zoom-controls">
       <label><strong>Scale:</strong></label>
       <span id="zoomVal">100%</span>
-      <button onclick="setZoom(1)">Reset 100%</button>
+      <button onclick="resetZoom()">Reset 100%</button>
     </div>
   </div>
 
@@ -203,6 +199,8 @@
   <script>
     let buildingsData = [];
     let currentZoom = 1;
+    let panX = 0;
+    let panY = 0;
 
     async function loadData() {
       try {
@@ -222,6 +220,7 @@
       renderGrid(buildingsData);
       setupScrollZoom();
       setupPan();
+      updateTransform();
     }
 
     function setupFilters() {
@@ -280,55 +279,56 @@
       btn.parentElement.remove();
     }
 
-    // Zoom nakierowany bezpośrednio na kursor myszy
+    function updateTransform() {
+      document.getElementById('zoomVal').innerText = Math.round(currentZoom * 100) + '%';
+      const stage = document.getElementById('stage');
+      stage.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
+    }
+
+    // ZOOM SKIEROWANY DOKŁADNIE NA KURSOR
     function setupScrollZoom() {
       const wrapper = document.getElementById('stageWrapper');
-      const stage = document.getElementById('stage');
       
       wrapper.addEventListener('wheel', (e) => {
         e.preventDefault(); 
         
-        const zoomStep = 0.08; 
-        const oldZoom = currentZoom;
-        let newZoom = e.deltaY < 0 ? oldZoom * (1 + zoomStep) : oldZoom / (1 + zoomStep);
+        const zoomStep = 0.1; 
+        const zoomFactor = e.deltaY < 0 ? (1 + zoomStep) : (1 / (1 + zoomStep));
         
+        let newZoom = currentZoom * zoomFactor;
         if (newZoom < 0.05) newZoom = 0.05;
-        if (newZoom > 3) newZoom = 3;
-        if (newZoom === oldZoom) return;
+        if (newZoom > 5) newZoom = 5;
+        if (newZoom === currentZoom) return;
 
-        // Pozycja myszy względem ramki obszaru roboczego
+        // Pozycja myszy względem ramki widoku
         const rect = wrapper.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
 
-        const scrollLeft = wrapper.scrollLeft;
-        const scrollTop = wrapper.scrollTop;
-        const ratio = newZoom / oldZoom;
+        // Przeliczenie punktu na płótnie pod kursorem przed i po zoomie
+        const stageX = (mouseX - panX) / currentZoom;
+        const stageY = (mouseY - panY) / currentZoom;
 
-        // Aplikacja nowej skali
+        panX = mouseX - stageX * newZoom;
+        panY = mouseY - stageY * newZoom;
         currentZoom = newZoom;
-        document.getElementById('zoomVal').innerText = Math.round(currentZoom * 100) + '%';
-        stage.style.transform = `scale(${currentZoom})`;
 
-        // Przesunięcie widoku tak, aby kursor pozostał w tym samym miejscu obiektu
-        wrapper.scrollLeft = (scrollLeft + mouseX) * ratio - mouseX;
-        wrapper.scrollTop = (scrollTop + mouseY) * ratio - mouseY;
+        updateTransform();
       }, { passive: false });
     }
 
+    // PRZESUWANIE MYSZKĄ (PANNING)
     function setupPan() {
       const wrapper = document.getElementById('stageWrapper');
       let isDown = false;
-      let startX, startY, scrollLeft, scrollTop;
+      let startX, startY;
 
       wrapper.addEventListener('mousedown', (e) => {
         if (e.target.closest('.remove-btn')) return;
 
         isDown = true;
-        startX = e.pageX - wrapper.offsetLeft;
-        startY = e.pageY - wrapper.offsetTop;
-        scrollLeft = wrapper.scrollLeft;
-        scrollTop = wrapper.scrollTop;
+        startX = e.clientX - panX;
+        startY = e.clientY - panY;
       });
 
       wrapper.addEventListener('mouseleave', () => { isDown = false; });
@@ -337,22 +337,17 @@
       wrapper.addEventListener('mousemove', (e) => {
         if (!isDown) return;
         e.preventDefault();
-        const x = e.pageX - wrapper.offsetLeft;
-        const y = e.pageY - wrapper.offsetTop;
-        const walkX = (x - startX) * 1.5;
-        const walkY = (y - startY) * 1.5;
-        wrapper.scrollLeft = scrollLeft - walkX;
-        wrapper.scrollTop = scrollTop - walkY;
+        panX = e.clientX - startX;
+        panY = e.clientY - startY;
+        updateTransform();
       });
     }
 
-    function setZoom(val) {
-      currentZoom = parseFloat(val);
-      if (currentZoom < 0.05) currentZoom = 0.05;
-      if (currentZoom > 3) currentZoom = 3;
-      
-      document.getElementById('zoomVal').innerText = Math.round(currentZoom * 100) + '%';
-      document.getElementById('stage').style.transform = `scale(${currentZoom})`;
+    function resetZoom() {
+      currentZoom = 1;
+      panX = 0;
+      panY = 0;
+      updateTransform();
     }
 
     loadData();
