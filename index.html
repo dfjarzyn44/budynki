@@ -168,10 +168,10 @@
     function updateDimensionsCache() {
       const wrapper = document.getElementById('stageWrapper');
       const stage = document.getElementById('stage');
-      stageDim.wrapperW = wrapper.clientWidth;
-      stageDim.wrapperH = wrapper.clientHeight;
-      stageDim.stageW = stage.scrollWidth;
-      stageDim.stageH = stage.offsetHeight;
+      stageDim.wrapperW = wrapper.clientWidth || 1;
+      stageDim.wrapperH = wrapper.clientHeight || 1;
+      stageDim.stageW = stage.scrollWidth || 1;
+      stageDim.stageH = stage.offsetHeight || 1;
     }
 
     function toggleFullscreen() {
@@ -235,7 +235,8 @@
       if (!ticking) {
         requestAnimationFrame(() => {
           clampPan();
-          document.getElementById('zoomVal').innerText = Math.round(currentZoom * 100) + '%';
+          const displayZoom = Math.round(currentZoom * 100);
+          document.getElementById('zoomVal').innerText = (isNaN(displayZoom) ? 100 : displayZoom) + '%';
           document.getElementById('stage').style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${currentZoom})`;
           ticking = false;
         });
@@ -363,10 +364,15 @@
       const scaleX = stageDim.wrapperW / stageDim.stageW;
       const scaleY = stageDim.wrapperH / stageDim.stageH;
 
-      currentZoom = Math.min(scaleX, scaleY, 1);
+      let newZoom = Math.min(scaleX, scaleY, 1);
+      if (isNaN(newZoom) || !isFinite(newZoom) || newZoom <= 0) {
+        newZoom = 1;
+      }
 
+      currentZoom = newZoom;
       panX = 0;
       panY = stageDim.wrapperH - (stageDim.stageH * currentZoom);
+      if (isNaN(panY)) panY = 0;
       applyTransform();
     }
 
