@@ -1,4 +1,5 @@
-[
+
+    [
   {
     "id": "cheops-pyramid",
     "name": "Great Pyramid of Giza",
@@ -7,7 +8,7 @@
     "category": "Ancient Monuments",
     "height_m": 138,
     "year_built": -2560,
-    "thumbnail": "Miniaturki/Cheops-pyramid.10cm.mini.jpg",
+    "thumbnail": "Cheops-pyramid.10cm.png",
     "image_2d": "Cheops-pyramid.10cm.png"
   },
   {
@@ -18,7 +19,7 @@
     "category": "Skyscrapers",
     "height_m": 319,
     "year_built": 1930,
-    "thumbnail": "Miniaturki/Chrysler-building-10cm.mini.jpg",
+    "thumbnail": "Chrysler-building-10cm.png",
     "image_2d": "Chrysler-building-10cm.png"
   },
   {
@@ -29,7 +30,7 @@
     "category": "Ancient Monuments",
     "height_m": 48,
     "year_built": 80,
-    "thumbnail": "Miniaturki/Colloseum.fixed.3arkany.10cm=px.mini.jpg",
+    "thumbnail": "Colloseum.fixed.3arkany.10cm=px.png",
     "image_2d": "Colloseum.fixed.3arkany.10cm=px.png"
   },
   {
@@ -40,8 +41,8 @@
     "category": "Towers & Monuments",
     "height_m": 300,
     "year_built": 1889,
-    "thumbnail": "eiffel-tower.fixed.10cm.png",
-    "image_2d": "eiffel-tower.fixed.10cm.png"
+    "thumbnail": "eiffel-tower-10cm.png",
+    "image_2d": "eiffel-tower-10cm.png"
   },
   {
     "id": "empire-state-building",
@@ -51,8 +52,8 @@
     "category": "Skyscrapers",
     "height_m": 443,
     "year_built": 1931,
-    "thumbnail": "empirestate-skal10cm=px.ng2.png",
-    "image_2d": "empirestate-skal10cm=px.ng2.png"
+    "thumbnail": "empirestate-skal-10cm.png",
+    "image_2d": "empirestate-skal-10cm.png"
   },
   {
     "id": "moscow-state-university",
@@ -117,7 +118,7 @@
     "category": "Government Buildings",
     "height_m": 21,
     "year_built": 1800,
-    "thumbnail": "wh10cm.png",
-    "image_2d": "wh10cm.png"
+    "thumbnail": "bialy.dom-10cm.png",
+    "image_2d": "bialy.dom-10cm.png"
   }
 ]
