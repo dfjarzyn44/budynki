@@ -87,7 +87,13 @@ function applyTransform() {
       clampPan();
       const displayZoom = Math.round(currentZoom * 100);
       document.getElementById('zoomVal').innerText = (isNaN(displayZoom) ? 100 : displayZoom) + '%';
-      document.getElementById('stage').style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${currentZoom})`;
+      
+      const stage = document.getElementById('stage');
+      stage.style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${currentZoom})`;
+      
+      // PRZEKAZUJEMY ODWROTNOŚĆ SKALI DO CSS (do utrzymania stałego rozmiaru dymków)
+      stage.style.setProperty('--inv-zoom', 1 / currentZoom);
+      
       ticking = false;
     });
     ticking = true;
@@ -97,7 +103,6 @@ function applyTransform() {
 function initInteractions() {
   const wrapper = document.getElementById('stageWrapper');
   
-  // Checkbox: pokazuje dymek, ale nie odpala fitToStage (nie zmienia wysokości płótna)
   const showInfoCheckbox = document.getElementById('showInfoCheckbox');
   if(showInfoCheckbox) {
     showInfoCheckbox.addEventListener('change', (e) => {
@@ -243,7 +248,6 @@ function addToStage(building) {
   const item = document.createElement('div');
   item.className = 'building-item';
   
-  // Pobieramy dane. Zabezpieczone, by uniknąć błędu jeśli czegoś brakuje.
   const built = building.built || 'Brak danych';
   const h_m = building.height_m || 'Brak danych';
   const h_ft = building.height_ft || 'Brak danych';
