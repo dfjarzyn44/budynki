@@ -42,7 +42,7 @@
     "height_m": 300,
     "year_built": 1889,
     "thumbnail": "eiffel-tower-10cm.png",
-    "image_2d": "eiffel-tower-10cm.png"
+    "image_2d": "Miniaturki/eiffel-tower-10cm.mini.jpg"
   },
   {
     "id": "empire-state-building",
@@ -52,7 +52,7 @@
     "category": "Skyscrapers",
     "height_m": 443,
     "year_built": 1931,
-    "thumbnail": "empirestate-skal-10cm.png",
+    "thumbnail": "Miniaturki/empirestate-skal-10cm.mini.jpg",
     "image_2d": "empirestate-skal-10cm.png"
   },
   {
@@ -85,7 +85,7 @@
     "category": "Skyscrapers",
     "height_m": 237,
     "year_built": 1955,
-    "thumbnail": "PKiN.10cm=px.png",
+    "thumbnail": "Miniaturki/PKiN.10cm=px.mini.jpg",
     "image_2d": "PKiN.10cm=px.png"
   },
   {
@@ -129,7 +129,7 @@
   "category": "Skyscrapers",
   "height_m": 310,
   "year_built": 1989,
-  "thumbnail": "bank-tower-la.png",
+  "thumbnail": "Miniaturki/bank-tower-la.mini.jpg",
   "image_2d": "bank-tower-la.png"
 }
     ]
