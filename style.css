@@ -270,13 +270,14 @@ button:active {
   display: flex; 
   align-items: flex-end; 
   justify-content: flex-start; 
-  gap: 15px; 
-  padding: 0 40px 0 40px;
+  gap: 100px; /* ZMIANA: 100 pikseli odstępu między budynkami */
+  padding: 0 4000px 0 40px; /* ZMIANA: Ogromny margines po prawej, trawa pociągnie się na 4000 pikseli */
   min-width: 100%; 
   width: max-content;
   transform-origin: bottom left;
   will-change: transform;
-  background: linear-gradient(to top, #4CAF50 15px, transparent 15px);
+  border-bottom: 10px solid #4CAF50; /* ZMIANA: Twarda ramka na samym dole jako trawa - nie da się jej rozjechać */
+  background: transparent; /* Usunięto wadliwy gradient */
 }
 
 .building-item { 
@@ -297,7 +298,7 @@ button:active {
   margin: 0; 
   padding: 0; 
   transform-origin: bottom center;
-  vertical-align: bottom;
+  vertical-align: bottom; /* Ważne: usuwa jakąkolwiek pustą szparę między obrazkiem a linią trawy */
 }
 
 .building-info { 
