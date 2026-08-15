@@ -224,7 +224,7 @@ button:active {
   border: 1px solid #ccc;
   border-radius: 8px; 
   background: #ffffff; 
-  overflow: auto; /* Zmienione na auto, aby umożliwić przewijanie */
+  overflow: auto;
   position: relative; 
   user-select: none; 
   touch-action: none;
@@ -271,13 +271,12 @@ button:active {
   align-items: flex-end; 
   justify-content: flex-start; 
   gap: 15px; 
-  padding: 0 40px 20px 40px; /* Padding dolny dla trawy */
+  padding: 0 40px 0 40px;
   min-width: 100%; 
   width: max-content;
   transform-origin: bottom left;
   will-change: transform;
-  /* Linia trawy przytwierdzona do dołu */
-  background: linear-gradient(to bottom, transparent 95%, #4CAF50 95%);
+  background: linear-gradient(to top, #4CAF50 15px, transparent 15px);
 }
 
 .building-item { 
@@ -298,6 +297,7 @@ button:active {
   margin: 0; 
   padding: 0; 
   transform-origin: bottom center;
+  vertical-align: bottom;
 }
 
 .building-info { 
