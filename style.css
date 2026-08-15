@@ -1,295 +1,357 @@
-let buildingsData = [], currentZoom = 1, panX = 0, panY = 0;
-let isFullscreen = false;
-let stageDim = { wrapperW: 0, wrapperH: 0, stageW: 0, stageH: 0 };
-let ticking = false;
+body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; color: #333; }
+body.no-scroll { overflow: hidden; }
 
-async function loadData() {
-  try {
-    const response = await fetch('budynki.json');
-    buildingsData = await response.json();
-    renderGrid(buildingsData);
-    setupSearch();
-    initInteractions();
-  } catch (e) {
-    console.error("Error loading JSON:", e);
-  }
+h1 { text-align: center; }
+ 
+.controls { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
+.controls input { width: 100%; max-width: 500px; padding: 12px 15px; font-size: 15px; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
+ 
+.grid { 
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
+  gap: 15px; margin-bottom: 25px; height: 260px; overflow-y: auto; 
+  border: 1px solid #ddd; padding: 12px; background: #fff; border-radius: 8px; 
+}
+.card { 
+  background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 8px; 
+  text-align: center; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s;
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.card:hover { border-color: #007bff; box-shadow: 0 4px 8px rgba(0,0,0,0.08); }
+ 
+.card img { 
+  width: 100%; height: 110px; object-fit: contain; 
+  object-position: center; border-radius: 5px; background-color: #f8f9fa; 
+}
+ 
+.card-details { margin-top: 6px; display: flex; flex-direction: column; gap: 2px; }
+.card h3 { margin: 2px 0 4px 0; font-size: 13px; font-weight: bold; color: #111; line-height: 1.2; }
+.card-sub { font-size: 11px; color: #666; font-weight: normal; }
+.card-meta { font-size: 11px; color: #007bff; font-weight: 600; margin-top: 2px; }
+
+.stage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+.zoom-controls { display: flex; gap: 10px; align-items: center; background: #fff; padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; }
+ 
+.btn-action { background: #007bff; color: white; border: none; padding: 8px 14px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+.btn-action:hover { background: #0056b3; }
+
+.stage-wrapper {
+  width: 100%; height: 450px; border: 2px solid #bbb;
+  border-radius: 8px; background: #ffffff; overflow: hidden;
+  position: relative; user-select: none; touch-action: pan-y;
 }
 
-function updateDimensionsCache() {
-  const wrapper = document.getElementById('stageWrapper');
-  const stage = document.getElementById('stage');
-  stageDim.wrapperW = wrapper.clientWidth || 1;
-  stageDim.wrapperH = wrapper.clientHeight || 1;
-  stageDim.stageW = stage.scrollWidth || 1;
-  stageDim.stageH = stage.offsetHeight || 1;
+.stage-wrapper.fullscreen {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
+  z-index: 9999; border: none; border-radius: 0; touch-action: none; cursor: grab;
+}
+.stage-wrapper.fullscreen:active { cursor: grabbing; }
+
+.close-fullscreen-btn {
+  display: none; position: absolute; top: 15px; right: 15px; z-index: 10000;
+  background: #ff4d4d; color: white; border: none; padding: 10px 18px;
+  border-radius: 6px; font-weight: bold; font-size: 16px; cursor: pointer;
+}
+.stage-wrapper.fullscreen .close-fullscreen-btn { display: block; }
+
+#stage { 
+  display: flex; align-items: flex-end; justify-content: flex-start; 
+  gap: 30px; padding: 20px 30px 25px 30px; box-sizing: border-box;
+  min-width: 100%; width: max-content;
+  background: linear-gradient(to bottom, transparent calc(100% - 25px), #4CAF50 calc(100% - 25px), #2e7d32 100%);
+  transform-origin: 0 0; position: absolute; top: 0; left: 0;
+}
+ 
+.building-item { 
+  display: flex; flex-direction: column; align-items: center; 
+  flex-shrink: 0; position: relative; margin: 0; padding: 0;
+}
+.building-item img { display: block; height: auto; width: auto; pointer-events: none; margin: 0; padding: 0; }
+ 
+.remove-btn {
+  position: absolute; top: -55px; background: #ff4d4d; color: white; border: none; border-radius: 50%;
+  width: 48px; height: 48px; font-size: 26px; cursor: pointer; z-index: 10;
+/* =========================================
+   BAZA I RESET
+   ========================================= */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-function toggleFullscreen() {
-  const wrapper = document.getElementById('stageWrapper');
-  const btn = document.getElementById('toggleFsBtn');
+body {
+  background-color: #f4f5f7;
+  color: #333;
+  padding: 10px;
+}
+
+/* Blokada przewijania tła w trybie pełnoekranowym */
+body.no-scroll {
+  overflow: hidden;
+}
+
+/* =========================================
+   NAGŁÓWEK (Skrócony do 1 wiersza)
+   ========================================= */
+h1 {
+  font-size: 1.4rem; /* Zmniejszony rozmiar */
+  text-align: center;
+  margin: 15px 0 20px 0;
+  white-space: nowrap; /* Wymusza 1 wiersz */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================================
+   WYSZUKIWARKA I FILTRY
+   ========================================= */
+.controls-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 600px;
+  margin: 0 auto 15px auto;
+}
+
+input[type="text"], select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* =========================================
+   SIATKA KAFELKÓW (Przewijanie poziome na 2 rzędy)
+   ========================================= */
+#buildingsGrid {
+  display: grid;
+  grid-template-rows: repeat(2, auto); /* 2 rzędy w pionie */
+  grid-auto-flow: column; /* Układanie kafelków w prawo */
+  grid-auto-columns: max-content;
+  gap: 12px;
+  padding: 5px 0 15px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch; /* Płynne przewijanie na telefonach */
   
-  isFullscreen = !isFullscreen;
-  
-  if (isFullscreen) {
-    wrapper.classList.add('fullscreen');
-    document.body.classList.add('no-scroll');
-    btn.innerText = "? Wyjdź z płótna";
-  } else {
-    wrapper.classList.remove('fullscreen');
-    document.body.classList.remove('no-scroll');
-    btn.innerText = "?? Otwórz interaktywne płótno";
-  }
-  
-  fitToStage();
+  /* Pasek przewijania */
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
 }
 
-function updateStageHeight() {
-  const wrapper = document.getElementById('stageWrapper');
-  const stage = document.getElementById('stage');
-  const buildingItems = stage.querySelectorAll('.building-item');
-
-  let maxBHeight = 0;
-  buildingItems.forEach(item => {
-    if (item.offsetHeight > maxBHeight) {
-      maxBHeight = item.offsetHeight;
-    }
-  });
-
-  const wrapperH = wrapper.clientHeight;
-  const neededH = maxBHeight > 0 ? (maxBHeight + 100) : wrapperH;
-  stage.style.height = neededH + 'px';
+#buildingsGrid::-webkit-scrollbar {
+  height: 8px;
 }
 
-function clampPan() {
-  const { wrapperW, wrapperH, stageW, stageH } = stageDim;
-  const scaledH = stageH * currentZoom;
-  const scaledW = stageW * currentZoom;
-
-  if (scaledH <= wrapperH) {
-    panY = wrapperH - scaledH;
-  } else {
-    const minPanY = wrapperH - scaledH; 
-    const maxPanY = 0; 
-    panY = Math.min(maxPanY, Math.max(minPanY, panY));
-  }
-
-  if (scaledW > wrapperW) {
-    const minPanX = wrapperW - scaledW;
-    panX = Math.min(0, Math.max(minPanX, panX));
-  } else {
-    panX = 0;
-  }
+#buildingsGrid::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 4px;
 }
 
-function applyTransform() {
-  if (!ticking) {
-    requestAnimationFrame(() => {
-      clampPan();
-      const displayZoom = Math.round(currentZoom * 100);
-      document.getElementById('zoomVal').innerText = (isNaN(displayZoom) ? 100 : displayZoom) + '%';
-      document.getElementById('stage').style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${currentZoom})`;
-      ticking = false;
-    });
-    ticking = true;
-  }
+/* =========================================
+   KAFELKI (Mniejsze i odchudzone z szarego tła)
+   ========================================= */
+.card {
+  width: 150px; /* Zmniejszona szerokość kafelka */
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 5px; /* Minimalny odstęp wokół zdjęcia */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.1s ease-in-out;
 }
 
-function initInteractions() {
-  const wrapper = document.getElementById('stageWrapper');
-  
-  wrapper.addEventListener('wheel', (e) => {
-    if (!isFullscreen) return;
-    e.preventDefault();
-    
-    const zoomStep = 0.12;
-    const factor = e.deltaY < 0 ? (1 + zoomStep) : (1 / (1 + zoomStep));
-    const newZoom = Math.min(Math.max(currentZoom * factor, 0.05), 5);
-    const actualFactor = newZoom / currentZoom;
-    
-    const rect = wrapper.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-
-    panX = mouseX - (mouseX - panX) * actualFactor;
-    panY = mouseY - (mouseY - panY) * actualFactor;
-    currentZoom = newZoom;
-    applyTransform();
-  }, { passive: false });
-
-  let isDown = false, startX, startY;
-  wrapper.addEventListener('mousedown', (e) => {
-    if (!isFullscreen || e.target.closest('.remove-btn')) return;
-    isDown = true;
-    startX = e.clientX - panX;
-    startY = e.clientY - panY;
-  });
-  window.addEventListener('mouseup', () => isDown = false);
-  wrapper.addEventListener('mousemove', (e) => {
-    if (!isDown || !isFullscreen) return;
-    panX = e.clientX - startX;
-    panY = e.clientY - startY;
-    applyTransform();
-  });
-
-  let lastTouchDist = 0;
-  wrapper.addEventListener('touchstart', (e) => {
-    if (!isFullscreen) return;
-    
-    if (e.touches.length === 1) {
-      isDown = true;
-      startX = e.touches[0].clientX - panX;
-      startY = e.touches[0].clientY - panY;
-    } else if (e.touches.length === 2) {
-      isDown = false;
-      lastTouchDist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-    }
-  }, { passive: true });
-
-  wrapper.addEventListener('touchmove', (e) => {
-    if (!isFullscreen) return;
-    const rect = wrapper.getBoundingClientRect();
-
-    if (e.touches.length === 1 && isDown) {
-      panX = e.touches[0].clientX - startX;
-      panY = e.touches[0].clientY - startY;
-      applyTransform();
-    } else if (e.touches.length === 2 && lastTouchDist > 0) {
-      const currentDist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-      if (currentDist === 0) return;
-
-      const factor = currentDist / lastTouchDist;
-      const newZoom = Math.min(Math.max(currentZoom * factor, 0.05), 5);
-      const actualFactor = newZoom / currentZoom;
-
-      const currentMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
-      const currentMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
-
-      panX = currentMidX - (currentMidX - panX) * actualFactor;
-      panY = currentMidY - (currentMidY - panY) * actualFactor;
-
-      currentZoom = newZoom;
-      lastTouchDist = currentDist;
-      applyTransform();
-    }
-  }, { passive: true });
-
-  wrapper.addEventListener('touchend', (e) => {
-    if (e.touches.length < 2) {
-      lastTouchDist = 0;
-    }
-    if (e.touches.length === 1) {
-      isDown = true;
-      startX = e.touches[0].clientX - panX;
-      startY = e.touches[0].clientY - panY;
-    } else {
-      isDown = false;
-    }
-  });
-
-  window.addEventListener('resize', () => fitToStage());
+.card:active {
+  transform: scale(0.96);
 }
 
-function fitToStage() {
-  updateStageHeight();
-  updateDimensionsCache();
-
-  const stage = document.getElementById('stage');
-  const buildingItems = stage.querySelectorAll('.building-item');
-  
-  if (buildingItems.length === 0) {
-    currentZoom = 1;
-    panX = 0;
-    panY = 0;
-    applyTransform();
-    return;
-  }
-
-  const scaleX = stageDim.wrapperW / stageDim.stageW;
-  const scaleY = stageDim.wrapperH / stageDim.stageH;
-
-  let newZoom = Math.min(scaleX, scaleY, 1);
-  if (isNaN(newZoom) || !isFinite(newZoom) || newZoom <= 0) {
-    newZoom = 1;
-  }
-
-  currentZoom = newZoom;
-  panX = 0;
-  panY = stageDim.wrapperH - (stageDim.stageH * currentZoom);
-  if (isNaN(panY)) panY = 0;
-  applyTransform();
+.card img {
+  width: 100%;
+  height: 90px; /* Zmniejszona wysokość, zachowuje lekko prostokątny format */
+  object-fit: cover; /* Zdjęcie wypełnia szerokość, brak szarych pasów po bokach */
+  border-radius: 4px;
+  display: block;
 }
 
-function addToStage(building) {
-  const stage = document.getElementById('stage');
-  const item = document.createElement('div');
-  item.className = 'building-item';
-
-  item.innerHTML = `
-    <button class="remove-btn" onclick="this.parentElement.remove(); fitToStage();">?</button>
-    <div class="building-info">
-      <strong>${building.name}</strong>
-    </div>
-    <img src="${building.image_2d}" alt="${building.name}">
-  `;
-  
-  const img = item.querySelector('img');
-  img.onload = () => fitToStage();
-  
-  stage.appendChild(item);
-  fitToStage();
+.card-details {
+  padding: 8px 2px 4px 2px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  justify-content: center;
 }
 
-function renderGrid(data) {
-  const grid = document.getElementById('buildingsGrid');
-  grid.innerHTML = '';
-  data.forEach(b => {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.onclick = () => addToStage(b);
-
-    const locationText = [b.city, b.country].filter(Boolean).join(', ');
-    const heightText = b.height ? `${b.height}m` : '';
-    const yearText = b.year ? `(${b.year})` : '';
-
-    card.innerHTML = `
-      <img src="${b.thumbnail}" alt="${b.name}">
-      <div class="card-details">
-        <h3>${b.name}</h3>
-        <div class="card-sub">${locationText || '—'}</div>
-        <div class="card-meta">${heightText} ${yearText}</div>
-      </div>
-    `;
-    grid.appendChild(card);
-  });
+/* Tytuł z zawijaniem do wielu wierszy */
+.card-details h3 {
+  font-size: 0.85rem;
+  margin: 0 0 4px 0;
+  white-space: normal; /* Pozwala na łamanie tekstu na 2-3 wiersze */
+  overflow-wrap: break-word; 
+  word-wrap: break-word;
+  line-height: 1.2;
 }
 
-function setupSearch() {
-  document.getElementById('searchInput').addEventListener('input', filterData);
+.card-sub {
+  font-size: 0.7rem;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-function filterData() {
-  const query = document.getElementById('searchInput').value.toLowerCase().trim();
-
-  const filtered = buildingsData.filter(b => {
-    if (!query) return true;
-    
-    const nameMatch = b.name && b.name.toLowerCase().includes(query);
-    const countryMatch = b.country && b.country.toLowerCase().includes(query);
-    const cityMatch = b.city && b.city.toLowerCase().includes(query);
-    const categoryMatch = b.category && b.category.toLowerCase().includes(query);
-    const heightMatch = b.height && b.height.toString().includes(query);
-    const yearMatch = b.year && b.year.toString().includes(query);
-
-    return nameMatch || countryMatch || cityMatch || categoryMatch || heightMatch || yearMatch;
-  });
-
-  renderGrid(filtered);
+.card-meta {
+  font-size: 0.7rem;
+  color: #888;
+  margin-top: 2px;
 }
 
-loadData();
+/* =========================================
+   COMPARISON AREA (PŁÓTNO I PANEL)
+   ========================================= */
+h2 {
+  font-size: 1.3rem;
+  margin: 20px 0 10px 0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: #ffffff;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+button {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+#toggleFsBtn {
+  background: #007bff;
+  color: #fff;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+button:active {
+  opacity: 0.8;
+}
+
+.zoom-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 60px;
+}
+
+.zoom-info span {
+  font-size: 0.75rem;
+  color: #555;
+}
+
+.building-info { 
+  margin-bottom: 6px; font-size: 12px; text-align: center; 
+  background: rgba(255,255,255,0.95); padding: 3px 6px; 
+  border: 1px solid #ccc; border-radius: 4px; white-space: nowrap;
+#zoomVal {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #000;
+}
+
+/* =========================================
+   PŁÓTNO (STAGE)
+   ========================================= */
+#stageWrapper {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  background: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+  touch-action: none; /* Zapobiega przeładowaniu/zoomowaniu strony na telefonie */
+}
+
+#stageWrapper.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  border: none;
+  border-radius: 0;
+}
+
+#stage {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  transform-origin: bottom left;
+  display: flex;
+  align-items: flex-end;
+  gap: 15px;
+  padding: 0 40px;
+  will-change: transform;
+}
+
+.building-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.building-item img {
+  display: block;
+  transform-origin: bottom center;
+}
+
+.building-info {
+  position: absolute;
+  top: -30px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.remove-btn {
+  position: absolute;
+  top: -65px;
+  background: #ff4d4f;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
