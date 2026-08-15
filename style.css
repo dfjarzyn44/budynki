@@ -23,20 +23,16 @@ input, select { padding: 10px; font-size: 16px; border: 1px solid #ccc; border-r
 
 .stage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
 .zoom-controls { display: flex; gap: 10px; align-items: center; background: #fff; padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; }
-
-.info-toggle { display: flex; align-items: center; gap: 5px; font-size: 14px; font-weight: bold; cursor: pointer; border-right: 1px solid #ccc; padding-right: 10px; }
  
 .btn-action { background: #007bff; color: white; border: none; padding: 8px 14px; border-radius: 5px; font-weight: bold; cursor: pointer; }
 .btn-action:hover { background: #0056b3; }
 
-/* OKNO PODGLĄDU */
 .stage-wrapper {
   width: 100%; height: 450px; border: 2px solid #bbb;
   border-radius: 8px; background: #ffffff; overflow: hidden;
   position: relative; user-select: none; touch-action: pan-y;
 }
 
-/* TRYB PEŁNOEKRANOWY */
 .stage-wrapper.fullscreen {
   position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
   z-index: 9999; border: none; border-radius: 0; touch-action: none; cursor: grab;
@@ -50,7 +46,6 @@ input, select { padding: 10px; font-size: 16px; border: 1px solid #ccc; border-r
 }
 .stage-wrapper.fullscreen .close-fullscreen-btn { display: block; }
 
-/* PŁÓTNO */
 #stage { 
   display: flex; align-items: flex-end; justify-content: flex-start; 
   gap: 30px; padding: 20px 30px 25px 30px; box-sizing: border-box;
@@ -66,67 +61,12 @@ input, select { padding: 10px; font-size: 16px; border: 1px solid #ccc; border-r
 .building-item img { display: block; height: auto; width: auto; pointer-events: none; margin: 0; padding: 0; }
  
 .remove-btn {
-  position: absolute; 
-  top: 0; /* Punkt zerowy to góra dymka z nazwą */
-  left: 50%;
-  margin-left: -24px; /* Centrowanie równe połowie szerokości */
-  background: #ff4d4d; color: white; border: none; border-radius: 50%;
+  position: absolute; top: -55px; background: #ff4d4d; color: white; border: none; border-radius: 50%;
   width: 48px; height: 48px; font-size: 26px; cursor: pointer; z-index: 10;
-  
-  /* Magia anty-skalowania i przesunięcia w górę o ok. 3x wyżej (-165px) */
-  transform: scale(var(--inv-zoom, 1)) translateY(-165px);
 }
 
 .building-info { 
-  position: relative;
-  margin-bottom: 6px; font-size: 13px; text-align: center; 
-  background: rgba(255,255,255,0.95); padding: 5px 10px; 
+  margin-bottom: 6px; font-size: 12px; text-align: center; 
+  background: rgba(255,255,255,0.95); padding: 3px 6px; 
   border: 1px solid #ccc; border-radius: 4px; white-space: nowrap;
-  
-  /* Magia anty-skalowania (zawsze ten sam rozmiar wizualny) */
-  transform: scale(var(--inv-zoom, 1));
-  transform-origin: bottom center;
 }
-
-/* PŁYWAJĄCY DYMEK ZE SZCZEGÓŁAMI */
-.extra-info {
-  display: none;
-  position: absolute;
-  left: calc(100% + 15px); /* Odstęp z prawej strony */
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 12px;
-  color: #222;
-  background: #fff;
-  border: 2px solid #007bff;
-  padding: 8px 12px;
-  border-radius: 6px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-  z-index: 50;
-  text-align: left;
-  line-height: 1.4;
-}
-
-.extra-info::before {
-  content: '';
-  position: absolute;
-  left: -12px;
-  top: 50%;
-  transform: translateY(-50%);
-  border-width: 6px;
-  border-style: solid;
-  border-color: transparent #007bff transparent transparent;
-}
-
-.extra-info::after {
-  content: '';
-  position: absolute;
-  left: -9px;
-  top: 50%;
-  transform: translateY(-50%);
-  border-width: 5px;
-  border-style: solid;
-  border-color: transparent #fff transparent transparent;
-}
-
-#stage.show-details .extra-info { display: block; }
