@@ -66,8 +66,15 @@ input, select { padding: 10px; font-size: 16px; border: 1px solid #ccc; border-r
 .building-item img { display: block; height: auto; width: auto; pointer-events: none; margin: 0; padding: 0; }
  
 .remove-btn {
-  position: absolute; top: -55px; background: #ff4d4d; color: white; border: none; border-radius: 50%;
+  position: absolute; 
+  top: 0; /* Punkt zerowy to góra dymka z nazwą */
+  left: 50%;
+  margin-left: -24px; /* Centrowanie równe połowie szerokości */
+  background: #ff4d4d; color: white; border: none; border-radius: 50%;
   width: 48px; height: 48px; font-size: 26px; cursor: pointer; z-index: 10;
+  
+  /* Magia anty-skalowania i przesunięcia w górę o ok. 3x wyżej (-165px) */
+  transform: scale(var(--inv-zoom, 1)) translateY(-165px);
 }
 
 .building-info { 
@@ -75,13 +82,17 @@ input, select { padding: 10px; font-size: 16px; border: 1px solid #ccc; border-r
   margin-bottom: 6px; font-size: 13px; text-align: center; 
   background: rgba(255,255,255,0.95); padding: 5px 10px; 
   border: 1px solid #ccc; border-radius: 4px; white-space: nowrap;
+  
+  /* Magia anty-skalowania (zawsze ten sam rozmiar wizualny) */
+  transform: scale(var(--inv-zoom, 1));
+  transform-origin: bottom center;
 }
 
 /* PŁYWAJĄCY DYMEK ZE SZCZEGÓŁAMI */
 .extra-info {
   display: none;
   position: absolute;
-  left: calc(100% + 15px); /* Odstęp 15px z prawej strony */
+  left: calc(100% + 15px); /* Odstęp z prawej strony */
   top: 50%;
   transform: translateY(-50%);
   font-size: 12px;
@@ -96,7 +107,6 @@ input, select { padding: 10px; font-size: 16px; border: 1px solid #ccc; border-r
   line-height: 1.4;
 }
 
-/* Trójkątna strzałka skierowana w lewo */
 .extra-info::before {
   content: '';
   position: absolute;
