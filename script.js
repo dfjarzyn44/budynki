@@ -161,7 +161,8 @@ function filterData() {
 
 async function loadData() {
   try {
-    const response = await fetch('buildings.json');
+    const response = await fetch('./budynki.json');
+    if (!response.ok) throw new Error('Nie znaleziono pliku budynki.json');
     buildingsData = await response.json();
     renderGrid(buildingsData);
     setupFilters();
