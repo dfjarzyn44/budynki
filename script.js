@@ -31,7 +31,30 @@ function updateStageTransform() {
 }
 
 function fitToStage() {
-  currentZoom = 1;
+  const stage = document.getElementById('stage');
+  const wrapper = document.getElementById('stageWrapper');
+  if (!stage || !wrapper) return;
+
+  // Znajdź wysokość najwyższego budynku
+  const images = Array.from(stage.querySelectorAll('.building-item img'));
+  let maxH = 0;
+  images.forEach(img => {
+    if (img.clientHeight > maxH) maxH = img.clientHeight;
+  });
+
+  // Ustal wysokość płótna (najwyższy budynek + 200px)
+  const targetHeight = maxH > 0 ? maxH + 200 : wrapper.clientHeight;
+  stage.style.height = targetHeight + 'px';
+
+  // Oblicz początkowy zoom, aby całość zmieściła się na ekranie, by nie było zbyt blisko
+  if (maxH > 0) {
+    currentZoom = wrapper.clientHeight / targetHeight;
+    // Blokada przed nienaturalnym powiększaniem bardzo małych budynków na starcie
+    if (currentZoom > 1) currentZoom = 1; 
+  } else {
+    currentZoom = 1;
+  }
+
   panX = 0;
   panY = 0;
   updateStageTransform();
@@ -70,7 +93,8 @@ function initInteractions() {
       if (!isFullscreen) return;
       e.preventDefault();
       const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-      currentZoom = Math.min(Math.max(0.2, currentZoom * zoomFactor), 5);
+      // Zmienione z 0.2 na 0.05, aby dało się oddalić jeszcze mocniej w razie potrzeby
+      currentZoom = Math.min(Math.max(0.05, currentZoom * zoomFactor), 5);
       updateStageTransform();
     }, { passive: false });
   }
@@ -103,7 +127,7 @@ function addToStage(building) {
   if (img) img.onload = () => fitToStage();
 
   stage.appendChild(item);
-  fitToStage();
+  fitToStage(); // Przelicz wysokość przy każdym dodaniu
 }
 
 function renderGrid(data) {
