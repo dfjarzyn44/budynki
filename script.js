@@ -87,13 +87,7 @@ function applyTransform() {
       clampPan();
       const displayZoom = Math.round(currentZoom * 100);
       document.getElementById('zoomVal').innerText = (isNaN(displayZoom) ? 100 : displayZoom) + '%';
-      
-      const stage = document.getElementById('stage');
-      stage.style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${currentZoom})`;
-      
-      // PRZEKAZUJEMY ODWROTNOŚĆ SKALI DO CSS (do utrzymania stałego rozmiaru dymków)
-      stage.style.setProperty('--inv-zoom', 1 / currentZoom);
-      
+      document.getElementById('stage').style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${currentZoom})`;
       ticking = false;
     });
     ticking = true;
@@ -103,18 +97,6 @@ function applyTransform() {
 function initInteractions() {
   const wrapper = document.getElementById('stageWrapper');
   
-  const showInfoCheckbox = document.getElementById('showInfoCheckbox');
-  if(showInfoCheckbox) {
-    showInfoCheckbox.addEventListener('change', (e) => {
-      const stage = document.getElementById('stage');
-      if (e.target.checked) {
-        stage.classList.add('show-details');
-      } else {
-        stage.classList.remove('show-details');
-      }
-    });
-  }
-
   wrapper.addEventListener('wheel', (e) => {
     if (!isFullscreen) return;
     e.preventDefault();
@@ -247,19 +229,11 @@ function addToStage(building) {
   const stage = document.getElementById('stage');
   const item = document.createElement('div');
   item.className = 'building-item';
-  
-  const built = building.built || 'Brak danych';
-  const h_m = building.height_m || 'Brak danych';
-  const h_ft = building.height_ft || 'Brak danych';
 
   item.innerHTML = `
     <button class="remove-btn" onclick="this.parentElement.remove(); fitToStage();">❌</button>
     <div class="building-info">
       <strong>${building.name}</strong>
-      <div class="extra-info">
-        <strong>Zbudowano:</strong> ${built}<br>
-        <strong>Wysokość:</strong> ${h_m} m / ${h_ft} ft
-      </div>
     </div>
     <img src="${building.image_2d}" alt="${building.name}">
   `;
