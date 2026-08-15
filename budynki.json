@@ -120,5 +120,16 @@
     "year_built": 1800,
     "thumbnail": "bialy.dom-10cm.png",
     "image_2d": "bialy.dom-10cm.png"
-  }
-]
+  },
+{
+  "id": "us-bank-tower",
+  "name": "U.S. Bank Tower",
+  "country": "United States",
+  "city": "Los Angeles",
+  "category": "Skyscrapers",
+  "height_m": 310,
+  "year_built": 1989,
+  "thumbnail": "bank-tower-la.png",
+  "image_2d": "bank-tower-la.png"
+}
+    ]
