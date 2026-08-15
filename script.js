@@ -8,10 +8,10 @@ async function loadData() {
     const response = await fetch('budynki.json');
     buildingsData = await response.json();
     renderGrid(buildingsData);
-    setupFilters();
+    setupSearch();
     initInteractions();
   } catch (e) {
-    console.error("Błąd ładowania JSON:", e);
+    console.error("Error loading JSON:", e);
   }
 }
 
@@ -252,39 +252,41 @@ function renderGrid(data) {
     const card = document.createElement('div');
     card.className = 'card';
     card.onclick = () => addToStage(b);
-    card.innerHTML = `<img src="${b.thumbnail}" alt="${b.name}"><h3>${b.name}</h3>`;
+
+    const locationText = [b.city, b.country].filter(Boolean).join(', ');
+    const heightText = b.height ? `${b.height}m` : '';
+    const yearText = b.year ? `(${b.year})` : '';
+
+    card.innerHTML = `
+      <img src="${b.thumbnail}" alt="${b.name}">
+      <div class="card-details">
+        <h3>${b.name}</h3>
+        <div class="card-sub">${locationText || '—'}</div>
+        <div class="card-meta">${heightText} ${yearText}</div>
+      </div>
+    `;
     grid.appendChild(card);
   });
 }
 
-function setupFilters() {
-  const catSelect = document.getElementById('categoryFilter');
-  const countrySelect = document.getElementById('countryFilter');
-  
-  const categories = [...new Set(buildingsData.map(b => b.category))].filter(Boolean);
-  const countries = [...new Set(buildingsData.map(b => b.country))].filter(Boolean);
-
-  catSelect.innerHTML = '<option value="">All Categories</option>';
-  categories.forEach(c => catSelect.innerHTML += `<option value="${c}">${c}</option>`);
-
-  countrySelect.innerHTML = '<option value="">All Countries</option>';
-  countries.forEach(c => countrySelect.innerHTML += `<option value="${c}">${c}</option>`);
-
+function setupSearch() {
   document.getElementById('searchInput').addEventListener('input', filterData);
-  catSelect.addEventListener('change', filterData);
-  countrySelect.addEventListener('change', filterData);
 }
 
 function filterData() {
-  const search = document.getElementById('searchInput').value.toLowerCase();
-  const cat = document.getElementById('categoryFilter').value;
-  const country = document.getElementById('countryFilter').value;
+  const query = document.getElementById('searchInput').value.toLowerCase().trim();
 
   const filtered = buildingsData.filter(b => {
-    const matchSearch = b.name.toLowerCase().includes(search);
-    const matchCat = !cat || b.category === cat;
-    const matchCountry = !country || b.country === country;
-    return matchSearch && matchCat && matchCountry;
+    if (!query) return true;
+    
+    const nameMatch = b.name && b.name.toLowerCase().includes(query);
+    const countryMatch = b.country && b.country.toLowerCase().includes(query);
+    const cityMatch = b.city && b.city.toLowerCase().includes(query);
+    const categoryMatch = b.category && b.category.toLowerCase().includes(query);
+    const heightMatch = b.height && b.height.toString().includes(query);
+    const yearMatch = b.year && b.year.toString().includes(query);
+
+    return nameMatch || countryMatch || cityMatch || categoryMatch || heightMatch || yearMatch;
   });
 
   renderGrid(filtered);
