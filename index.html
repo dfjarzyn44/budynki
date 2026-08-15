@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -9,13 +10,18 @@
 
   <h1>Building Size Comparison</h1>
   <div class="controls">
-    <input type="text" id="searchInput" placeholder="Search by building, country, city, height...">
+    <input type="text" id="searchInput" placeholder="Search building...">
+    <select id="categoryFilter"><option value="">All Categories</option></select>
+    <select id="countryFilter"><option value="">All Countries</option></select>
   </div>
   <div class="grid" id="buildingsGrid"></div>
 
   <div class="stage-header">
     <h2>Comparison Area</h2>
     <div class="zoom-controls">
+      <label class="info-toggle">
+        <input type="checkbox" id="showInfoCheckbox"> Pokaż szczegóły
+      </label>
       <button class="btn-action" id="toggleFsBtn" onclick="toggleFullscreen()">🔲 Otwórz interaktywne płótno</button>
       <span>Skala: <strong id="zoomVal">100%</strong></span>
       <button onclick="fitToStage()">Reset</button>
