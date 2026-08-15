@@ -215,24 +215,6 @@ button:active {
   gap: 6px;
 }
 
-.zoom-info {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 60px;
-}
-
-.zoom-info span {
-  font-size: 0.75rem;
-  color: #555;
-}
-
-#zoomVal {
-  font-weight: bold;
-  font-size: 1rem;
-  color: #000;
-}
-
 /* =========================================
    PŁÓTNO (STAGE) I WRAPPER
    ========================================= */
@@ -242,7 +224,7 @@ button:active {
   border: 1px solid #ccc;
   border-radius: 8px; 
   background: #ffffff; 
-  overflow: hidden;
+  overflow: auto; /* Zmienione na auto, aby umożliwić przewijanie */
   position: relative; 
   user-select: none; 
   touch-action: none;
@@ -289,11 +271,13 @@ button:active {
   align-items: flex-end; 
   justify-content: flex-start; 
   gap: 15px; 
-  padding: 0 40px; 
+  padding: 0 40px 20px 40px; /* Padding dolny dla trawy */
   min-width: 100%; 
   width: max-content;
   transform-origin: bottom left;
   will-change: transform;
+  /* Linia trawy przytwierdzona do dołu */
+  background: linear-gradient(to bottom, transparent 95%, #4CAF50 95%);
 }
 
 .building-item { 
