@@ -97,18 +97,18 @@ function applyTransform() {
 function initInteractions() {
   const wrapper = document.getElementById('stageWrapper');
   
-  // Checkbox logic
+  // Checkbox: pokazuje dymek, ale nie odpala fitToStage (nie zmienia wysokości płótna)
   const showInfoCheckbox = document.getElementById('showInfoCheckbox');
-  showInfoCheckbox.addEventListener('change', (e) => {
-    const stage = document.getElementById('stage');
-    if (e.target.checked) {
-      stage.classList.add('show-details');
-    } else {
-      stage.classList.remove('show-details');
-    }
-    // Wymusza przeliczenie wysokości kontenera, gdy tekst się pojawi
-    setTimeout(fitToStage, 10);
-  });
+  if(showInfoCheckbox) {
+    showInfoCheckbox.addEventListener('change', (e) => {
+      const stage = document.getElementById('stage');
+      if (e.target.checked) {
+        stage.classList.add('show-details');
+      } else {
+        stage.classList.remove('show-details');
+      }
+    });
+  }
 
   wrapper.addEventListener('wheel', (e) => {
     if (!isFullscreen) return;
@@ -243,18 +243,18 @@ function addToStage(building) {
   const item = document.createElement('div');
   item.className = 'building-item';
   
-  // Zabezpieczone dane w obiekcie building (w razie braków w json)
-  const built = building.built || 'N/A';
-  const h_m = building.height_m || 'N/A';
-  const h_ft = building.height_ft || 'N/A';
+  // Pobieramy dane. Zabezpieczone, by uniknąć błędu jeśli czegoś brakuje.
+  const built = building.built || 'Brak danych';
+  const h_m = building.height_m || 'Brak danych';
+  const h_ft = building.height_ft || 'Brak danych';
 
   item.innerHTML = `
     <button class="remove-btn" onclick="this.parentElement.remove(); fitToStage();">❌</button>
     <div class="building-info">
       <strong>${building.name}</strong>
       <div class="extra-info">
-        Built: ${built}<br>
-        Height: ${h_m}m / ${h_ft}ft
+        <strong>Zbudowano:</strong> ${built}<br>
+        <strong>Wysokość:</strong> ${h_m} m / ${h_ft} ft
       </div>
     </div>
     <img src="${building.image_2d}" alt="${building.name}">
