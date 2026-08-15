@@ -1,59 +1,351 @@
 /* =========================================
-   KAFELKI DOPASOWANE DO MINIATURKI
+   BAZA I RESET
    ========================================= */
-.card {
-  width: max-content; /* Kafelek dopasowuje się szerokością dokładnie do zawartości/miniaturki */
-  max-width: 180px;   /* Zabezpieczenie, żeby gigantyczne miniaturki nie rozciągały kafelka w nieskończoność */
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 6px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  cursor: pointer;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  background-color: #f4f5f7;
+  color: #333;
+  padding: 10px;
+}
+
+body.no-scroll {
+  overflow: hidden;
+}
+
+/* =========================================
+   NAGŁÓWEK
+   ========================================= */
+h1 {
+  font-size: 1.4rem;
+  text-align: center;
+  margin: 15px 0 20px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================================
+   WYSZUKIWARKA I FILTRY
+   ========================================= */
+.controls-container {
   display: flex;
   flex-direction: column;
-  transition: transform 0.1s ease-in-out;
+  gap: 10px;
+  max-width: 600px;
+  margin: 0 auto 15px auto;
+}
+
+.controls { 
+  display: flex; 
+  gap: 10px; 
+  margin-bottom: 20px; 
+  justify-content: center; 
+}
+
+.controls input, input[type="text"], select {
+  width: 100%;
+  max-width: 500px;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* =========================================
+   SIATKA KAFELKÓW
+   ========================================= */
+#buildingsGrid, .grid { 
+  display: grid; 
+  grid-template-rows: repeat(2, auto);
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 12px; 
+  margin-bottom: 25px; 
+  padding: 5px 0 15px 0; 
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  background: #fff; 
+  border: 1px solid #ddd; 
+  border-radius: 8px; 
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+}
+
+#buildingsGrid::-webkit-scrollbar, .grid::-webkit-scrollbar {
+  height: 8px;
+}
+
+#buildingsGrid::-webkit-scrollbar-thumb, .grid::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 4px;
+}
+
+/* =========================================
+   KAFELKI (Dopasowane do miniaturek)
+   ========================================= */
+.card { 
+  width: max-content;
+  max-width: 180px;
+  background: white; 
+  border: 1px solid #e0e0e0; 
+  border-radius: 8px; 
+  padding: 6px; 
+  text-align: center; 
+  cursor: pointer; 
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  display: flex; 
+  flex-direction: column; 
+  transition: transform 0.1s ease-in-out, border-color 0.2s, box-shadow 0.2s;
+}
+
+.card:hover { 
+  border-color: #007bff; 
+  box-shadow: 0 4px 8px rgba(0,0,0,0.08); 
 }
 
 .card:active {
   transform: scale(0.96);
 }
 
-.card img {
-  width: 100%;
-  height: 90px;
-  object-fit: contain; /* Miniaturka zachowuje proporcje, a kafelek dopasowuje się do jej szerokości */
-  border-radius: 4px;
+.card img { 
+  width: 100%; 
+  height: 90px; 
+  object-fit: contain; 
+  object-position: center; 
+  border-radius: 4px; 
+  background-color: #f8f9fa; 
   display: block;
 }
 
-.card-details {
+.card-details { 
   padding: 6px 2px 2px 2px;
   text-align: center;
-  display: flex;
-  flex-direction: column;
+  display: flex; 
+  flex-direction: column; 
   justify-content: center;
 }
 
-/* Tytuły z długimi nazwami ładnie podijają się na kolejne wiersze wewnątrz szerokości miniaturki */
-.card-details h3 {
+.card h3, .card-details h3 { 
   font-size: 0.8rem;
-  margin: 0 0 3px 0;
-  white-space: normal; 
-  overflow-wrap: break-word; 
-  word-wrap: break-word;
+  margin: 0 0 3px 0; 
+  font-weight: bold; 
+  color: #111; 
   line-height: 1.2;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
-.card-sub {
-  font-size: 0.7rem;
-  color: #666;
-  white-space: normal; /* Podwija się też, gdy nazwa miejscowości/kraju jest za długa */
+.card-sub { 
+  font-size: 0.7rem; 
+  color: #666; 
+  font-weight: normal; 
+  white-space: normal;
   overflow-wrap: break-word;
 }
 
-.card-meta {
-  font-size: 0.7rem;
-  color: #888;
-  margin-top: 2px;
+.card-meta { 
+  font-size: 0.7rem; 
+  color: #007bff; 
+  font-weight: 600; 
+  margin-top: 2px; 
+}
+
+/* =========================================
+   COMPARISON AREA & STAGE HEADER
+   ========================================= */
+h2 {
+  font-size: 1.3rem;
+  margin: 20px 0 10px 0;
+}
+
+.stage-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 10px; 
+  flex-wrap: wrap; 
+  gap: 10px; 
+}
+
+.zoom-controls { 
+  display: flex; 
+  gap: 10px; 
+  align-items: center; 
+  background: #fff; 
+  padding: 6px 12px; 
+  border: 1px solid #ccc; 
+  border-radius: 6px; 
+}
+
+.btn-action, button { 
+  background: #007bff; 
+  color: white; 
+  border: none; 
+  padding: 8px 14px; 
+  border-radius: 6px; 
+  font-weight: bold; 
+  font-size: 0.9rem;
+  cursor: pointer; 
+}
+
+.btn-action:hover, button:hover { 
+  background: #0056b3; 
+}
+
+button:active {
+  opacity: 0.8;
+}
+
+#toggleFsBtn {
+  background: #007bff;
+  color: #fff;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.zoom-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 60px;
+}
+
+.zoom-info span {
+  font-size: 0.75rem;
+  color: #555;
+}
+
+#zoomVal {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #000;
+}
+
+/* =========================================
+   PŁÓTNO (STAGE) I WRAPPER
+   ========================================= */
+.stage-wrapper, #stageWrapper {
+  width: 100%; 
+  height: 400px; 
+  border: 1px solid #ccc;
+  border-radius: 8px; 
+  background: #ffffff; 
+  overflow: hidden;
+  position: relative; 
+  user-select: none; 
+  touch-action: none;
+}
+
+.stage-wrapper.fullscreen, #stageWrapper.fullscreen {
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  width: 100vw; 
+  height: 100vh; 
+  height: 100dvh;
+  z-index: 9999; 
+  border: none; 
+  border-radius: 0; 
+}
+
+.close-fullscreen-btn {
+  display: none; 
+  position: absolute; 
+  top: 15px; 
+  right: 15px; 
+  z-index: 10000;
+  background: #ff4d4d; 
+  color: white; 
+  border: none; 
+  padding: 10px 18px;
+  border-radius: 6px; 
+  font-weight: bold; 
+  font-size: 16px; 
+  cursor: pointer;
+}
+
+.stage-wrapper.fullscreen .close-fullscreen-btn,
+#stageWrapper.fullscreen .close-fullscreen-btn { 
+  display: block; 
+}
+
+#stage { 
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  display: flex; 
+  align-items: flex-end; 
+  justify-content: flex-start; 
+  gap: 15px; 
+  padding: 0 40px; 
+  min-width: 100%; 
+  width: max-content;
+  transform-origin: bottom left;
+  will-change: transform;
+}
+
+.building-item { 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  flex-shrink: 0; 
+  position: relative; 
+  margin: 0; 
+  padding: 0;
+}
+
+.building-item img { 
+  display: block; 
+  height: auto; 
+  width: auto; 
+  pointer-events: none; 
+  margin: 0; 
+  padding: 0; 
+  transform-origin: bottom center;
+}
+
+.building-info { 
+  position: absolute;
+  top: -30px;
+  margin-bottom: 6px; 
+  font-size: 0.8rem; 
+  text-align: center; 
+  background: rgba(255,255,255,0.95); 
+  padding: 2px 6px; 
+  border: 1px solid #ccc; 
+  border-radius: 4px; 
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.remove-btn {
+  position: absolute; 
+  top: -65px; 
+  background: #ff4d4f; 
+  color: white; 
+  border: none; 
+  border-radius: 50%;
+  width: 28px; 
+  height: 28px; 
+  font-size: 12px; 
+  cursor: pointer; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  z-index: 10;
 }
