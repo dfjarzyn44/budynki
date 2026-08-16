@@ -106,7 +106,6 @@ function initInteractions() {
     } else {
       stage.classList.remove('show-details');
     }
-    // Wymusza przeliczenie wysokości kontenera, gdy tekst się pojawi
     setTimeout(fitToStage, 10);
   });
 
@@ -243,7 +242,6 @@ function addToStage(building) {
   const item = document.createElement('div');
   item.className = 'building-item';
   
-  // Zabezpieczone dane w obiekcie building (w razie braków w json)
   const built = building.built || 'N/A';
   const h_m = building.height_m || 'N/A';
   const h_ft = building.height_ft || 'N/A';
@@ -280,33 +278,21 @@ function renderGrid(data) {
 }
 
 function setupFilters() {
-  const catSelect = document.getElementById('categoryFilter');
-  const countrySelect = document.getElementById('countryFilter');
-  
-  const categories = [...new Set(buildingsData.map(b => b.category))].filter(Boolean);
-  const countries = [...new Set(buildingsData.map(b => b.country))].filter(Boolean);
-
-  catSelect.innerHTML = '<option value="">All Categories</option>';
-  categories.forEach(c => catSelect.innerHTML += `<option value="${c}">${c}</option>`);
-
-  countrySelect.innerHTML = '<option value="">All Countries</option>';
-  countries.forEach(c => countrySelect.innerHTML += `<option value="${c}">${c}</option>`);
-
-  document.getElementById('searchInput').addEventListener('input', filterData);
-  catSelect.addEventListener('change', filterData);
-  countrySelect.addEventListener('change', filterData);
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', filterData);
+  }
 }
 
 function filterData() {
   const search = document.getElementById('searchInput').value.toLowerCase();
-  const cat = document.getElementById('categoryFilter').value;
-  const country = document.getElementById('countryFilter').value;
 
   const filtered = buildingsData.filter(b => {
-    const matchSearch = b.name.toLowerCase().includes(search);
-    const matchCat = !cat || b.category === cat;
-    const matchCountry = !country || b.country === country;
-    return matchSearch && matchCat && matchCountry;
+    const name = (b.name || '').toLowerCase();
+    const city = (b.city || '').toLowerCase();
+    const country = (b.country || '').toLowerCase();
+
+    return name.includes(search) || city.includes(search) || country.includes(search);
   });
 
   renderGrid(filtered);
