@@ -89,3 +89,10 @@ input, select { padding: 10px; font-size: 16px; border: 1px solid #ccc; border-r
 
 /* Gdy dodamy klasę 'show-details' na #stage, pokazujemy dodatkowe info */
 #stage.show-details .extra-info { display: block; }
+
+/* LOKALIZACJA W KAFELKACH */
+.card-location {
+  margin: 4px 0 0 0;
+  font-size: 11px;
+  color: #666;
+}
