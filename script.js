@@ -1,138 +1,274 @@
-let currentZoom = 1;
-let panX = 0;
-let panY = 0;
+let buildingsData = [], currentZoom = 1, panX = 0, panY = 0;
 let isFullscreen = false;
+let stageDim = { wrapperW: 0, wrapperH: 0, stageW: 0, stageH: 0 };
 let ticking = false;
-let buildingsData = [];
 
-function clampPan() {
-  // Opcjonalna logika ograniczająca przesuwanie płótna
+async function loadData() {
+  try {
+    const response = await fetch('budynki.json');
+    buildingsData = await response.json();
+    renderGrid(buildingsData);
+    setupFilters();
+    initInteractions();
+  } catch (e) {
+    console.error("Błąd ładowania JSON:", e);
+  }
 }
 
-function updateStageTransform() {
+function updateDimensionsCache() {
+  const wrapper = document.getElementById('stageWrapper');
+  const stage = document.getElementById('stage');
+  stageDim.wrapperW = wrapper.clientWidth || 1;
+  stageDim.wrapperH = wrapper.clientHeight || 1;
+  stageDim.stageW = stage.scrollWidth || 1;
+  stageDim.stageH = stage.offsetHeight || 1;
+}
+
+function toggleFullscreen() {
+  const wrapper = document.getElementById('stageWrapper');
+  const btn = document.getElementById('toggleFsBtn');
+  
+  isFullscreen = !isFullscreen;
+  
+  if (isFullscreen) {
+    wrapper.classList.add('fullscreen');
+    document.body.classList.add('no-scroll');
+    btn.innerText = "❌ Wyjdź z płótna";
+  } else {
+    wrapper.classList.remove('fullscreen');
+    document.body.classList.remove('no-scroll');
+    btn.innerText = "🔲 Otwórz interaktywne płótno";
+  }
+  
+  fitToStage();
+}
+
+function updateStageHeight() {
+  const wrapper = document.getElementById('stageWrapper');
+  const stage = document.getElementById('stage');
+  const buildingItems = stage.querySelectorAll('.building-item');
+
+  let maxBHeight = 0;
+  buildingItems.forEach(item => {
+    if (item.offsetHeight > maxBHeight) {
+      maxBHeight = item.offsetHeight;
+    }
+  });
+
+  const wrapperH = wrapper.clientHeight;
+  const neededH = maxBHeight > 0 ? (maxBHeight + 100) : wrapperH;
+  stage.style.height = neededH + 'px';
+}
+
+function clampPan() {
+  const { wrapperW, wrapperH, stageW, stageH } = stageDim;
+  const scaledH = stageH * currentZoom;
+  const scaledW = stageW * currentZoom;
+
+  if (scaledH <= wrapperH) {
+    panY = wrapperH - scaledH;
+  } else {
+    const minPanY = wrapperH - scaledH; 
+    const maxPanY = 0; 
+    panY = Math.min(maxPanY, Math.max(minPanY, panY));
+  }
+
+  if (scaledW > wrapperW) {
+    const minPanX = wrapperW - scaledW;
+    panX = Math.min(0, Math.max(minPanX, panX));
+  } else {
+    panX = 0;
+  }
+}
+
+function applyTransform() {
   if (!ticking) {
     requestAnimationFrame(() => {
       clampPan();
       const displayZoom = Math.round(currentZoom * 100);
-      const zoomValEl = document.getElementById('zoomVal');
-      if (zoomValEl) {
-        zoomValEl.innerText = (isNaN(displayZoom) ? 100 : displayZoom) + '%';
-      }
-      
-      const stage = document.getElementById('stage');
-      if (stage) {
-        stage.style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${currentZoom})`;
-        stage.style.setProperty('--inv-zoom', 1 / currentZoom);
-      }
+      document.getElementById('zoomVal').innerText = (isNaN(displayZoom) ? 100 : displayZoom) + '%';
+      document.getElementById('stage').style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${currentZoom})`;
       ticking = false;
     });
     ticking = true;
   }
 }
 
-function fitToStage() {
-  const stage = document.getElementById('stage');
-  const wrapper = document.getElementById('stageWrapper');
-  if (!stage || !wrapper) return;
-
-  // Znajdź wysokość najwyższego budynku
-  const images = Array.from(stage.querySelectorAll('.building-item img'));
-  let maxH = 0;
-  images.forEach(img => {
-    if (img.clientHeight > maxH) maxH = img.clientHeight;
-  });
-
-  // Ustal wysokość płótna (najwyższy budynek + 200px)
-  const targetHeight = maxH > 0 ? maxH + 200 : wrapper.clientHeight;
-  stage.style.height = targetHeight + 'px';
-
-  // Oblicz początkowy zoom, aby całość zmieściła się na ekranie, by nie było zbyt blisko
-  if (maxH > 0) {
-    currentZoom = wrapper.clientHeight / targetHeight;
-    // Blokada przed nienaturalnym powiększaniem bardzo małych budynków na starcie
-    if (currentZoom > 1) currentZoom = 1; 
-  } else {
-    currentZoom = 1;
-  }
-
-  panX = 0;
-  panY = 0;
-  updateStageTransform();
-}
-
-function toggleFullscreen() {
-  const wrapper = document.getElementById('stageWrapper');
-  const body = document.body;
-  isFullscreen = !isFullscreen;
-  
-  if (wrapper) wrapper.classList.toggle('fullscreen', isFullscreen);
-  if (body) body.classList.toggle('no-scroll', isFullscreen);
-  
-  fitToStage();
-}
-
 function initInteractions() {
   const wrapper = document.getElementById('stageWrapper');
-  const showInfoCheckbox = document.getElementById('showInfoCheckbox');
   
-  if (showInfoCheckbox) {
-    showInfoCheckbox.addEventListener('change', (e) => {
-      const stage = document.getElementById('stage');
-      if (stage) {
-        if (e.target.checked) {
-          stage.classList.add('show-details');
-        } else {
-          stage.classList.remove('show-details');
-        }
-      }
-    });
+  // Checkbox logic
+  const showInfoCheckbox = document.getElementById('showInfoCheckbox');
+  showInfoCheckbox.addEventListener('change', (e) => {
+    const stage = document.getElementById('stage');
+    if (e.target.checked) {
+      stage.classList.add('show-details');
+    } else {
+      stage.classList.remove('show-details');
+    }
+    // Wymusza przeliczenie wysokości kontenera, gdy tekst się pojawi
+    setTimeout(fitToStage, 10);
+  });
+
+  wrapper.addEventListener('wheel', (e) => {
+    if (!isFullscreen) return;
+    e.preventDefault();
+    
+    const zoomStep = 0.12;
+    const factor = e.deltaY < 0 ? (1 + zoomStep) : (1 / (1 + zoomStep));
+    const newZoom = Math.min(Math.max(currentZoom * factor, 0.05), 5);
+    const actualFactor = newZoom / currentZoom;
+    
+    const rect = wrapper.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    panX = mouseX - (mouseX - panX) * actualFactor;
+    panY = mouseY - (mouseY - panY) * actualFactor;
+    currentZoom = newZoom;
+    applyTransform();
+  }, { passive: false });
+
+  let isDown = false, startX, startY;
+  wrapper.addEventListener('mousedown', (e) => {
+    if (!isFullscreen || e.target.closest('.remove-btn')) return;
+    isDown = true;
+    startX = e.clientX - panX;
+    startY = e.clientY - panY;
+  });
+  window.addEventListener('mouseup', () => isDown = false);
+  wrapper.addEventListener('mousemove', (e) => {
+    if (!isDown || !isFullscreen) return;
+    panX = e.clientX - startX;
+    panY = e.clientY - startY;
+    applyTransform();
+  });
+
+  let lastTouchDist = 0;
+  wrapper.addEventListener('touchstart', (e) => {
+    if (!isFullscreen) return;
+    
+    if (e.touches.length === 1) {
+      isDown = true;
+      startX = e.touches[0].clientX - panX;
+      startY = e.touches[0].clientY - panY;
+    } else if (e.touches.length === 2) {
+      isDown = false;
+      lastTouchDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+    }
+  }, { passive: true });
+
+  wrapper.addEventListener('touchmove', (e) => {
+    if (!isFullscreen) return;
+    const rect = wrapper.getBoundingClientRect();
+
+    if (e.touches.length === 1 && isDown) {
+      panX = e.touches[0].clientX - startX;
+      panY = e.touches[0].clientY - startY;
+      applyTransform();
+    } else if (e.touches.length === 2 && lastTouchDist > 0) {
+      const currentDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      if (currentDist === 0) return;
+
+      const factor = currentDist / lastTouchDist;
+      const newZoom = Math.min(Math.max(currentZoom * factor, 0.05), 5);
+      const actualFactor = newZoom / currentZoom;
+
+      const currentMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+      const currentMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+
+      panX = currentMidX - (currentMidX - panX) * actualFactor;
+      panY = currentMidY - (currentMidY - panY) * actualFactor;
+
+      currentZoom = newZoom;
+      lastTouchDist = currentDist;
+      applyTransform();
+    }
+  }, { passive: true });
+
+  wrapper.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) {
+      lastTouchDist = 0;
+    }
+    if (e.touches.length === 1) {
+      isDown = true;
+      startX = e.touches[0].clientX - panX;
+      startY = e.touches[0].clientY - panY;
+    } else {
+      isDown = false;
+    }
+  });
+
+  window.addEventListener('resize', () => fitToStage());
+}
+
+function fitToStage() {
+  updateStageHeight();
+  updateDimensionsCache();
+
+  const stage = document.getElementById('stage');
+  const buildingItems = stage.querySelectorAll('.building-item');
+  
+  if (buildingItems.length === 0) {
+    currentZoom = 1;
+    panX = 0;
+    panY = 0;
+    applyTransform();
+    return;
   }
 
-  if (wrapper) {
-    wrapper.addEventListener('wheel', (e) => {
-      if (!isFullscreen) return;
-      e.preventDefault();
-      const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-      // Zmienione z 0.2 na 0.05, aby dało się oddalić jeszcze mocniej w razie potrzeby
-      currentZoom = Math.min(Math.max(0.05, currentZoom * zoomFactor), 5);
-      updateStageTransform();
-    }, { passive: false });
+  const scaleX = stageDim.wrapperW / stageDim.stageW;
+  const scaleY = stageDim.wrapperH / stageDim.stageH;
+
+  let newZoom = Math.min(scaleX, scaleY, 1);
+  if (isNaN(newZoom) || !isFinite(newZoom) || newZoom <= 0) {
+    newZoom = 1;
   }
+
+  currentZoom = newZoom;
+  panX = 0;
+  panY = stageDim.wrapperH - (stageDim.stageH * currentZoom);
+  if (isNaN(panY)) panY = 0;
+  applyTransform();
 }
 
 function addToStage(building) {
   const stage = document.getElementById('stage');
-  if (!stage) return;
-  
   const item = document.createElement('div');
   item.className = 'building-item';
   
-  const built = building.year_built || building.built || 'Brak danych';
-  const h_m = building.height_m || 'Brak danych';
-  const h_ft = building.height_ft || (building.height_m ? Math.round(building.height_m * 3.28084) : 'Brak danych');
+  // Zabezpieczone dane w obiekcie building (w razie braków w json)
+  const built = building.built || 'N/A';
+  const h_m = building.height_m || 'N/A';
+  const h_ft = building.height_ft || 'N/A';
 
   item.innerHTML = `
     <button class="remove-btn" onclick="this.parentElement.remove(); fitToStage();">❌</button>
     <div class="building-info">
       <strong>${building.name}</strong>
       <div class="extra-info">
-        <strong>Zbudowano:</strong> ${built}<br>
-        <strong>Wysokość:</strong> ${h_m} m / ${h_ft} ft
+        Built: ${built}<br>
+        Height: ${h_m}m / ${h_ft}ft
       </div>
     </div>
     <img src="${building.image_2d}" alt="${building.name}">
   `;
-
+  
   const img = item.querySelector('img');
-  if (img) img.onload = () => fitToStage();
-
+  img.onload = () => fitToStage();
+  
   stage.appendChild(item);
-  fitToStage(); // Przelicz wysokość przy każdym dodaniu
+  fitToStage();
 }
 
 function renderGrid(data) {
   const grid = document.getElementById('buildingsGrid');
-  if (!grid) return;
   grid.innerHTML = '';
   data.forEach(b => {
     const card = document.createElement('div');
@@ -146,9 +282,7 @@ function renderGrid(data) {
 function setupFilters() {
   const catSelect = document.getElementById('categoryFilter');
   const countrySelect = document.getElementById('countryFilter');
-
-  if (!catSelect || !countrySelect) return;
-
+  
   const categories = [...new Set(buildingsData.map(b => b.category))].filter(Boolean);
   const countries = [...new Set(buildingsData.map(b => b.country))].filter(Boolean);
 
@@ -158,20 +292,15 @@ function setupFilters() {
   countrySelect.innerHTML = '<option value="">All Countries</option>';
   countries.forEach(c => countrySelect.innerHTML += `<option value="${c}">${c}</option>`);
 
-  const searchInput = document.getElementById('searchInput');
-  if (searchInput) searchInput.addEventListener('input', filterData);
+  document.getElementById('searchInput').addEventListener('input', filterData);
   catSelect.addEventListener('change', filterData);
   countrySelect.addEventListener('change', filterData);
 }
 
 function filterData() {
-  const searchInput = document.getElementById('searchInput');
-  const catSelect = document.getElementById('categoryFilter');
-  const countrySelect = document.getElementById('countryFilter');
-
-  const search = searchInput ? searchInput.value.toLowerCase() : '';
-  const cat = catSelect ? catSelect.value : '';
-  const country = countrySelect ? countrySelect.value : '';
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const cat = document.getElementById('categoryFilter').value;
+  const country = document.getElementById('countryFilter').value;
 
   const filtered = buildingsData.filter(b => {
     const matchSearch = b.name.toLowerCase().includes(search);
@@ -183,17 +312,4 @@ function filterData() {
   renderGrid(filtered);
 }
 
-async function loadData() {
-  try {
-    const response = await fetch('./budynki.json');
-    if (!response.ok) throw new Error('Nie znaleziono pliku budynki.json');
-    buildingsData = await response.json();
-    renderGrid(buildingsData);
-    setupFilters();
-    initInteractions();
-  } catch (error) {
-    console.error('Błąd ładowania danych JSON:', error);
-  }
-}
-
-document.addEventListener('DOMContentLoaded', loadData);
+loadData();
