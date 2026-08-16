@@ -2,10 +2,12 @@ body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; 
 body.no-scroll { overflow: hidden; }
 
 h1 { text-align: center; }
- 
+
 .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; justify-content: center; }
-input, select { padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; width: 280px; }
- 
+input, select { padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; }
+
+#searchInput { width: 280px; }
+
 .grid { 
   display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
   gap: 15px; margin-bottom: 25px; height: 200px; overflow-y: auto; 
@@ -13,19 +15,19 @@ input, select { padding: 10px; font-size: 16px; border: 1px solid #ccc; border-r
 }
 .card { background: white; border: 2px solid #ddd; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; }
 .card:hover { border-color: #007bff; }
- 
+
 .card img { 
   width: 100%; height: 120px; object-fit: contain; 
   object-position: center; border-radius: 5px; background-color: #eee; 
 }
- 
+
 .card h3 { margin: 8px 0 0 0; font-size: 13px; }
 
 .stage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
 .zoom-controls { display: flex; gap: 10px; align-items: center; background: #fff; padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; }
 
 .info-toggle { display: flex; align-items: center; gap: 5px; font-size: 14px; font-weight: bold; cursor: pointer; border-right: 1px solid #ccc; padding-right: 10px; }
- 
+
 .btn-action { background: #007bff; color: white; border: none; padding: 8px 14px; border-radius: 5px; font-weight: bold; cursor: pointer; }
 .btn-action:hover { background: #0056b3; }
 
@@ -58,13 +60,13 @@ input, select { padding: 10px; font-size: 16px; border: 1px solid #ccc; border-r
   background: linear-gradient(to bottom, transparent calc(100% - 25px), #4CAF50 calc(100% - 25px), #2e7d32 100%);
   transform-origin: 0 0; position: absolute; top: 0; left: 0;
 }
- 
+
 .building-item { 
   display: flex; flex-direction: column; align-items: center; 
   flex-shrink: 0; position: relative; margin: 0; padding: 0;
 }
 .building-item img { display: block; height: auto; width: auto; pointer-events: none; margin: 0; padding: 0; }
- 
+
 .remove-btn {
   position: absolute; top: -55px; background: #ff4d4d; color: white; border: none; border-radius: 50%;
   width: 48px; height: 48px; font-size: 26px; cursor: pointer; z-index: 10;
