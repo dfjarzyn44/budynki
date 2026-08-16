@@ -272,7 +272,16 @@ function renderGrid(data) {
     const card = document.createElement('div');
     card.className = 'card';
     card.onclick = () => addToStage(b);
-    card.innerHTML = `<img src="${b.thumbnail}" alt="${b.name}"><h3>${b.name}</h3>`;
+
+    const city = b.city || '';
+    const country = b.country || '';
+    const locationText = [city, country].filter(Boolean).join(', ');
+
+    card.innerHTML = `
+      <img src="${b.thumbnail}" alt="${b.name}">
+      <h3>${b.name}</h3>
+      ${locationText ? `<p class="card-location">${locationText}</p>` : ''}
+    `;
     grid.appendChild(card);
   });
 }
