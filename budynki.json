@@ -19,7 +19,7 @@
     "category": "Skyscrapers",
     "height_m": 319,
     "year_built": 1930,
-    "thumbnail": "Chrysler-building-10cm.png",
+    "thumbnail": "Miniaturki/Chrysler-building-10cm.mini.jpg",
     "image_2d": "Chrysler-building-10cm.png"
   },
   {
@@ -107,7 +107,7 @@
     "category": "Skyscrapers",
     "height_m": 310,
     "year_built": 2012,
-    "thumbnail": "the-shard.10cm.png",
+    "thumbnail": "Miniaturki/the-shard.10cm.mini.jpg",
     "image_2d": "the-shard.10cm.png"
   },
   {
