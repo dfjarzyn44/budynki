@@ -33,11 +33,11 @@ function toggleFullscreen() {
   if (isFullscreen) {
     wrapper.classList.add('fullscreen');
     document.body.classList.add('no-scroll');
-    btn.innerText = "❌ Wyjdź z płótna";
+    btn.innerText = " Wyjdź z płótna";
   } else {
     wrapper.classList.remove('fullscreen');
     document.body.classList.remove('no-scroll');
-    btn.innerText = "🔲 Otwórz interaktywne płótno";
+    btn.innerText = " Otwórz interaktywne płótno";
   }
   
   fitToStage();
@@ -207,6 +207,12 @@ function initInteractions() {
   window.addEventListener('resize', () => fitToStage());
 }
 
+function clearStage() {
+  const stage = document.getElementById('stage');
+  stage.innerHTML = '';
+  fitToStage();
+}
+
 function fitToStage() {
   updateStageHeight();
   updateDimensionsCache();
@@ -247,7 +253,7 @@ function addToStage(building) {
   const h_ft = building.height_ft || 'N/A';
 
   item.innerHTML = `
-    <button class="remove-btn" onclick="this.parentElement.remove(); fitToStage();">❌</button>
+    <button class="remove-btn" onclick="this.parentElement.remove(); fitToStage();">?</button>
     <div class="building-info">
       <strong>${building.name}</strong>
       <div class="extra-info">
