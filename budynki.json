@@ -131,5 +131,16 @@
   "year_built": 1989,
   "thumbnail": "Miniaturki/bank-tower-la.mini.jpg",
   "image_2d": "bank-tower-la.png"
+},
+  {
+  "id": "burj-khalifa",
+  "name": "Burj Khalifa",
+  "country": "United Arab Emirates",
+  "city": "Dubai",
+  "category": "Skyscrapers",
+  "height_m": 828,
+  "year_built": 2010,
+  "thumbnail": "Miniaturki/burj-khalifa.mini.jpg",
+  "image_2d": "burj-khalifa.png"
 }
     ]
